@@ -21,7 +21,7 @@ export function TransactionList() {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-xl font-bold">
+          <h2 className="text-2xl font-bold">
             {transactions?.length || 0} Transactions
           </h2>
           <p className="text-sm text-gray-500">
@@ -34,14 +34,14 @@ export function TransactionList() {
             className="h-10 gap-2 rounded-full border border-gray-200 px-4"
             onClick={() => setIsFilterOpen(true)}
           >
-            <span>Filter</span>
+            <span className="font-semibold">Filter</span>
             <ChevronDown className="h-4 w-4" />
           </Button>
           <Button
             variant="outline"
             className="h-10 gap-2 rounded-full border border-gray-200 px-4"
           >
-            <span>Export list</span>
+            <span className="font-semibold">Export list</span>
             <Download className="h-4 w-4" />
           </Button>
         </div>

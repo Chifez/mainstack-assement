@@ -35,16 +35,16 @@ export function WalletInfo() {
   return (
     <div className="space-y-6">
       {items.map((item, index) => (
-        <div key={index} className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <span className="text-sm text-gray-500">{item.label}</span>
-            {item.hasInfo && <Info className="h-3.5 w-3.5 text-gray-300" />}
+        <div key={index} className="flex items-start justify-between">
+          <div className="flex flex-col items-start gap-1">
+            <span className="text-sm mb-2 text-gray-500">{item.label}</span>
+            {isLoading ? (
+              <Skeleton className="h-6 w-24" />
+            ) : (
+              <div className="font-bold text-2xl">USD {item.value}</div>
+            )}
           </div>
-          {isLoading ? (
-            <Skeleton className="h-6 w-24" />
-          ) : (
-            <div className="font-bold">{formatCurrency(item.value)}</div>
-          )}
+          {item.hasInfo && <Info className="h-3.5 w-3.5 text-gray-300" />}
         </div>
       ))}
     </div>

@@ -1,8 +1,8 @@
 // Fix the floating toolbar styling
 export function FloatingToolbar() {
   return (
-    <div className="fixed left-6 top-1/2 -translate-y-1/2 flex flex-col gap-4 z-40">
-      <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center">
+    <div className="fixed left-3 top-1/2 -translate-y-1/2 flex flex-col gap-2 z-40 border border-gray-100 bg-white shadow-sm rounded-full p-1">
+      <div className="size-8 rounded-full   flex items-center justify-center">
         <svg
           width="16"
           height="16"
@@ -19,7 +19,7 @@ export function FloatingToolbar() {
           />
         </svg>
       </div>
-      <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center">
+      <div className="size-8 rounded-full  flex items-center justify-center">
         <svg
           width="16"
           height="16"
@@ -36,7 +36,7 @@ export function FloatingToolbar() {
           />
         </svg>
       </div>
-      <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center">
+      <div className="size-8 rounded-full  flex items-center justify-center">
         <svg
           width="16"
           height="16"
@@ -60,7 +60,7 @@ export function FloatingToolbar() {
           />
         </svg>
       </div>
-      <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center">
+      <div className="size-8 rounded-full  flex items-center justify-center">
         <svg
           width="16"
           height="16"

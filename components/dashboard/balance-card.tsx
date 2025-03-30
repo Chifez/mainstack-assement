@@ -16,9 +16,9 @@ export function BalanceCard() {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center gap-10">
         <div>
-          <div className="text-sm text-gray-500 mb-1">Available Balance</div>
+          <div className="text-sm text-gray-500 mb-2">Available Balance</div>
           {isLoading ? (
             <Skeleton className="h-10 w-48" />
           ) : (
@@ -28,7 +28,7 @@ export function BalanceCard() {
             </p>
           )}
         </div>
-        <Button className="bg-black text-white hover:bg-black/90 rounded-full px-6">
+        <Button className="bg-black text-white hover:bg-black/90 rounded-full px-7">
           Withdraw
         </Button>
       </div>
