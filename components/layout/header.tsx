@@ -16,9 +16,9 @@ export function Header() {
   });
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white">
-      <div className="flex h-16 items-center px-4 md:px-6">
-        <div className="flex items-center gap-2 font-bold text-xl">
+    <header className="sticky top-2 z-50  border-b bg-white w-[98%] mx-auto rounded-full shadow">
+      <div className="flex justify-between h-16 items-center px-4 md:px-6">
+        <div className="w-full flex items-center gap-2 font-bold text-xl ">
           <svg
             width="36"
             height="36"
@@ -32,11 +32,11 @@ export function Header() {
             <path d="M21.59 21.59H28.53V28.53H21.59V21.59Z" fill="black" />
           </svg>
         </div>
-        <nav className="mx-auto flex items-center gap-8">
+        <nav className="mx-auto flex items-center gap-8 flex-1 ">
           <Link
             href="#"
             className={cn(
-              'flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-black/80',
+              'flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-white hover:bg-black rounded-full px-4 py-2',
               'text-gray-500'
             )}
           >
@@ -60,7 +60,7 @@ export function Header() {
           <Link
             href="#"
             className={cn(
-              'flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-black/80',
+              'flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-white hover:bg-black rounded-full px-4 py-2',
               'text-gray-500'
             )}
           >
@@ -121,7 +121,7 @@ export function Header() {
           <Link
             href="#"
             className={cn(
-              'flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-black/80',
+              'flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-white hover:bg-black rounded-full px-4 py-2',
               'text-gray-500'
             )}
           >
@@ -145,7 +145,7 @@ export function Header() {
           <Link
             href="#"
             className={cn(
-              'flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-black/80',
+              'flex items-center gap-1.5 text-sm font-medium transition-colors hover:text-white hover:bg-black rounded-full px-4 py-2',
               'text-gray-500'
             )}
           >
@@ -188,7 +188,7 @@ export function Header() {
             Apps
           </Link>
         </nav>
-        <div className="ml-auto flex items-center gap-4">
+        <div className="mr-auto flex items-center justify-end gap-4  w-full">
           <button className="rounded-full p-2 hover:bg-gray-100">
             <Bell className="h-5 w-5 text-gray-500" />
           </button>

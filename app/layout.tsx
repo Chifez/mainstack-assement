@@ -1,6 +1,7 @@
 import type React from 'react';
 import type { Metadata } from 'next';
 import { Inter, DM_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 import './globals.css';
 import { QueryProvider } from '@/lib/query-provider';
 
@@ -9,6 +10,12 @@ const dmSans = DM_Sans({
   subsets: ['latin'],
   variable: '--font-dm-sans',
   weight: ['400', '500', '700'],
+});
+
+const degular = localFont({
+  variable: '--font-degular',
+  src: '../public/font/DegularVariable.ttf',
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -23,7 +30,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${dmSans.variable} font-sans`}>
+      <body
+        className={`${degular.variable} ${inter.variable} ${dmSans.variable} font-degular antialiased`}
+      >
         {/* <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange> */}
         <QueryProvider>{children}</QueryProvider>
         {/* </ThemeProvider> */}

@@ -22,9 +22,10 @@ export function BalanceCard() {
           {isLoading ? (
             <Skeleton className="h-10 w-48" />
           ) : (
-            <div className="text-3xl font-bold">
-              {formatCurrency(wallet?.balance || 0)}
-            </div>
+            <p className="text-4xl font-degular font-bold">
+              {/* {formatCurrency(wallet?.balance || 0)} */}
+              USD {wallet?.balance || 0}
+            </p>
           )}
         </div>
         <Button className="bg-black text-white hover:bg-black/90 rounded-full px-6">
