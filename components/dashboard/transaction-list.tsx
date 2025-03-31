@@ -19,9 +19,14 @@ export function TransactionList({ filters }: { filters?: any[] }) {
     queryFn: fetchTransactions,
   });
 
-  const { setIsFilterOpen } = useFilterStore();
+  const { setIsFilterOpen, dateRange, transactionType, transactionStatus } =
+    useFilterStore();
 
-  const activeFiltersCount = filters?.length || 0;
+  const activeFiltersCount = [
+    dateRange.from || dateRange.to ? 1 : 0,
+    transactionType.length > 0 && !transactionType.includes('all') ? 1 : 0,
+    transactionStatus.length > 0 && !transactionStatus.includes('all') ? 1 : 0,
+  ].reduce((acc, curr) => acc + curr, 0);
 
   return (
     <div className="space-y-6">
@@ -42,12 +47,9 @@ export function TransactionList({ filters }: { filters?: any[] }) {
           >
             <span className="font-medium">Filter</span>
             {activeFiltersCount > 0 && (
-              <Badge
-                variant="secondary"
-                className="ml-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
-              >
+              <span className="bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {activeFiltersCount}
-              </Badge>
+              </span>
             )}
             <ChevronDown className="h-3 w-3" />
           </Button>
