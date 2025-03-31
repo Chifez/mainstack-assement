@@ -17,5 +17,5 @@ export function formatCurrency(amount: number): string {
 
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
-  return format(date, 'MMM dd/yyyy');
+  return format(date, 'MMM dd, yyyy');
 }

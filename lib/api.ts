@@ -25,6 +25,7 @@ export async function fetchTransactions() {
 
     const data = await response.json();
 
+    console.log('data', data);
     // Ensure each transaction has at least an empty metadata object
     return data.map((transaction: any) => ({
       ...transaction,

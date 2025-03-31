@@ -16,6 +16,8 @@ export function Header() {
     queryFn: fetchUser,
   });
 
+  console.log('user', user);
+
   return (
     <header className="sticky top-2 z-50 border-b bg-white w-[98%] mx-auto rounded-full shadow">
       <div className="flex justify-between h-16 items-center px-4 md:px-6">
@@ -116,8 +118,9 @@ export function Header() {
               <div className="flex items-center justify-center w-fit gap-3 bg-[#EFF1F6] rounded-full p-1">
                 <Avatar className="h-8 w-8 border border-gray-200">
                   <AvatarFallback className="bg-gradient-to-b to-[#131316] from-[#5C6670] text-white font-semibold text-xs">
-                    {user?.first_name?.charAt(0)}
-                    {user?.last_name?.charAt(0)}
+                    {user
+                      ? user?.first_name?.charAt(0) + user?.last_name?.charAt(0)
+                      : 'MS'}
                   </AvatarFallback>
                 </Avatar>
                 <Image
