@@ -1,14 +1,34 @@
 'use client';
 
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronDown, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { CalendarIcon, ChevronDown, X } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
-  DateRange,
-  TransactionStatus,
-  TransactionType,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { cn } from '@/lib/utils';
+import {
+  type DateRange,
+  type TransactionStatus,
+  type TransactionType,
   useFilterStore,
 } from '@/store/filter-store';
 
@@ -31,15 +51,17 @@ export function FilterModal() {
   const [localTransactionStatus, setLocalTransactionStatus] =
     useState<TransactionStatus[]>(transactionStatus);
 
+  // Reset local state when store changes
+  useEffect(() => {
+    setLocalDateRange(dateRange);
+    setLocalTransactionType(transactionType);
+    setLocalTransactionStatus(transactionStatus);
+  }, [dateRange, transactionType, transactionStatus]);
+
   // UI state for dropdowns
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
   const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-
-  // Current month and year for calendar
-  const [currentMonth, setCurrentMonth] = useState(new Date());
-
-  if (!isFilterOpen) return null;
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
 
   const handleApply = () => {
     setDateRange(localDateRange);
@@ -84,10 +106,6 @@ export function FilterModal() {
     }
   };
 
-  const formatDateDisplay = (date?: Date) => {
-    return date ? format(date, 'dd MMM yyyy') : '';
-  };
-
   const getTypeDisplayText = () => {
     if (
       localTransactionType.includes('all') &&
@@ -110,7 +128,7 @@ export function FilterModal() {
     );
 
     if (selectedTypes.length > 1) {
-      return `${selectedTypes.join(', ')}, Ca...`;
+      return `${selectedTypes.join(', ').substring(0, 20)}...`;
     }
 
     return selectedTypes[0] || 'Store Transactions';
@@ -136,27 +154,29 @@ export function FilterModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 filter-modal">
-      <div className="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-lg">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold">Filter</h2>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 rounded-full"
-            onClick={() => setIsFilterOpen(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+    <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+      <DialogContent className="sm:max-w-md rounded-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
+        <DialogHeader>
+          <div className="flex items-center justify-between">
+            <DialogTitle className="text-xl font-bold">Filter</DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full"
+              onClick={() => setIsFilterOpen(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </DialogHeader>
 
         <div className="space-y-6">
-          <div className="flex space-x-2 mb-6">
+          {/* Quick date filters */}
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
-              className={`px-4 py-2 text-sm rounded-full ${
-                !localDateRange.from ? 'bg-gray-100' : 'bg-white'
-              }`}
+              size="sm"
+              className={cn('rounded-full', !localDateRange.from && 'bg-muted')}
               onClick={() =>
                 setLocalDateRange({ from: undefined, to: undefined })
               }
@@ -165,7 +185,8 @@ export function FilterModal() {
             </Button>
             <Button
               variant="outline"
-              className="px-4 py-2 text-sm rounded-full"
+              size="sm"
+              className="rounded-full"
               onClick={() => {
                 const today = new Date();
                 const lastWeek = new Date(today);
@@ -177,7 +198,8 @@ export function FilterModal() {
             </Button>
             <Button
               variant="outline"
-              className="px-4 py-2 text-sm rounded-full"
+              size="sm"
+              className="rounded-full"
               onClick={() => {
                 const today = new Date();
                 const lastMonth = new Date(today);
@@ -189,7 +211,8 @@ export function FilterModal() {
             </Button>
             <Button
               variant="outline"
-              className="px-4 py-2 text-sm rounded-full"
+              size="sm"
+              className="rounded-full"
               onClick={() => {
                 const today = new Date();
                 const lastThreeMonths = new Date(today);
@@ -201,278 +224,263 @@ export function FilterModal() {
             </Button>
           </div>
 
+          {/* Date Range */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Date Range</label>
             <div className="grid grid-cols-2 gap-2">
-              <button
-                className={`flex items-center justify-between px-4 py-3 bg-gray-100 rounded-lg text-sm ${
-                  isCalendarOpen ? 'border border-black' : ''
-                }`}
-                onClick={() => setIsCalendarOpen(!isCalendarOpen)}
+              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      'justify-start text-left font-normal bg-muted/50',
+                      !localDateRange.from && 'text-muted-foreground'
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {localDateRange.from ? (
+                      format(localDateRange.from, 'dd MMM yyyy')
+                    ) : (
+                      <span>From date</span>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-full p-0" align="start">
+                  <Calendar
+                    mode="range"
+                    selected={localDateRange}
+                    onSelect={(range) =>
+                      setLocalDateRange({
+                        from: range?.from,
+                        to: range?.to,
+                      })
+                    }
+                    initialFocus
+                    numberOfMonths={1}
+                    className="w-full"
+                  />
+                </PopoverContent>
+              </Popover>
+
+              <Button
+                variant="outline"
+                className={cn(
+                  'justify-start text-left font-normal bg-muted/50',
+                  !localDateRange.to && 'text-muted-foreground'
+                )}
+                onClick={() => setIsCalendarOpen(true)}
               >
-                <span>
-                  {localDateRange.from
-                    ? format(localDateRange.from, 'dd MMM yyyy')
-                    : 'Select date'}
-                </span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
-              <button className="flex items-center justify-between px-4 py-3 bg-gray-100 rounded-lg text-sm">
-                <span>
-                  {localDateRange.to
-                    ? format(localDateRange.to, 'dd MMM yyyy')
-                    : 'Select date'}
-                </span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {localDateRange.to ? (
+                  format(localDateRange.to, 'dd MMM yyyy')
+                ) : (
+                  <span>To date</span>
+                )}
+              </Button>
             </div>
-
-            {isCalendarOpen && (
-              <div className="mt-2 p-4 bg-white rounded-lg border">
-                <div className="flex items-center justify-between mb-4">
-                  <button className="p-1">
-                    <ChevronDown className="h-4 w-4 rotate-90" />
-                  </button>
-                  <h3 className="text-sm font-medium">July, 2023</h3>
-                  <button className="p-1">
-                    <ChevronDown className="h-4 w-4 -rotate-90" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-7 gap-1">
-                  <div className="text-xs text-center text-gray-500">Mon</div>
-                  <div className="text-xs text-center text-gray-500">Tue</div>
-                  <div className="text-xs text-center text-gray-500">Wed</div>
-                  <div className="text-xs text-center text-gray-500">Thu</div>
-                  <div className="text-xs text-center text-gray-500">Fri</div>
-                  <div className="text-xs text-center text-gray-500">Sat</div>
-                  <div className="text-xs text-center text-gray-500">Sun</div>
-
-                  {/* Calendar days - this is just a static representation */}
-                  {Array.from({ length: 31 }).map((_, i) => (
-                    <button
-                      key={i}
-                      className={`h-8 w-8 rounded-full flex items-center justify-center text-sm ${
-                        i + 1 === 17 ? 'bg-black text-white' : ''
-                      }`}
-                      onClick={() => {
-                        const date = new Date(2023, 6, i + 1);
-                        setLocalDateRange({ ...localDateRange, from: date });
-                        setIsCalendarOpen(false);
-                      }}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
+          {/* Transaction Type */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Transaction Type</label>
-            <div className="relative">
-              <button
-                className={`w-full flex items-center justify-between px-4 py-3 ${
-                  isTypeDropdownOpen
-                    ? 'border border-black rounded-lg'
-                    : 'bg-gray-100 rounded-lg'
-                }`}
-                onClick={() => {
-                  setIsTypeDropdownOpen(!isTypeDropdownOpen);
-                  setIsStatusDropdownOpen(false);
-                  setIsCalendarOpen(false);
-                }}
-              >
-                <span className="text-sm">{getTypeDisplayText()}</span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
-
-              {isTypeDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border shadow-sm z-10">
-                  <div className="p-2">
-                    <div className="flex items-center space-x-2 p-2">
-                      <Checkbox
-                        id="type-store"
-                        checked={localTransactionType.includes('all')}
-                        onCheckedChange={(checked) =>
-                          handleTransactionTypeChange('all', checked as boolean)
-                        }
-                      />
-                      <label htmlFor="type-store" className="text-sm">
-                        Store Transactions
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-2">
-                      <Checkbox
-                        id="type-tipped"
-                        checked={localTransactionType.includes('get_tipped')}
-                        onCheckedChange={(checked) =>
-                          handleTransactionTypeChange(
-                            'get_tipped',
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <label htmlFor="type-tipped" className="text-sm">
-                        Get Tipped
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-2">
-                      <Checkbox
-                        id="type-withdrawals"
-                        checked={localTransactionType.includes('withdrawals')}
-                        onCheckedChange={(checked) =>
-                          handleTransactionTypeChange(
-                            'withdrawals',
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <label htmlFor="type-withdrawals" className="text-sm">
-                        Withdrawals
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-2">
-                      <Checkbox
-                        id="type-chargebacks"
-                        checked={localTransactionType.includes('chargebacks')}
-                        onCheckedChange={(checked) =>
-                          handleTransactionTypeChange(
-                            'chargebacks',
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <label htmlFor="type-chargebacks" className="text-sm">
-                        Chargebacks
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-2">
-                      <Checkbox
-                        id="type-cashbacks"
-                        checked={localTransactionType.includes('cashbacks')}
-                        onCheckedChange={(checked) =>
-                          handleTransactionTypeChange(
-                            'cashbacks',
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <label htmlFor="type-cashbacks" className="text-sm">
-                        Cashbacks
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-2">
-                      <Checkbox
-                        id="type-refer"
-                        checked={localTransactionType.includes('refer_earn')}
-                        onCheckedChange={(checked) =>
-                          handleTransactionTypeChange(
-                            'refer_earn',
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <label htmlFor="type-refer" className="text-sm">
-                        Refer & Earn
-                      </label>
-                    </div>
+            <Collapsible
+              open={isTypeDropdownOpen}
+              onOpenChange={setIsTypeDropdownOpen}
+              className="w-full"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between bg-muted/50"
+                >
+                  <span className="text-sm font-normal">
+                    {getTypeDisplayText()}
+                  </span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-1 border rounded-lg p-2 bg-background">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2 p-2">
+                    <Checkbox
+                      id="type-store"
+                      checked={localTransactionType.includes('all')}
+                      onCheckedChange={(checked) =>
+                        handleTransactionTypeChange('all', checked as boolean)
+                      }
+                    />
+                    <label htmlFor="type-store" className="text-sm">
+                      Store Transactions
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-2">
+                    <Checkbox
+                      id="type-tipped"
+                      checked={localTransactionType.includes('get_tipped')}
+                      onCheckedChange={(checked) =>
+                        handleTransactionTypeChange(
+                          'get_tipped',
+                          checked as boolean
+                        )
+                      }
+                    />
+                    <label htmlFor="type-tipped" className="text-sm">
+                      Get Tipped
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-2">
+                    <Checkbox
+                      id="type-withdrawals"
+                      checked={localTransactionType.includes('withdrawals')}
+                      onCheckedChange={(checked) =>
+                        handleTransactionTypeChange(
+                          'withdrawals',
+                          checked as boolean
+                        )
+                      }
+                    />
+                    <label htmlFor="type-withdrawals" className="text-sm">
+                      Withdrawals
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-2">
+                    <Checkbox
+                      id="type-chargebacks"
+                      checked={localTransactionType.includes('chargebacks')}
+                      onCheckedChange={(checked) =>
+                        handleTransactionTypeChange(
+                          'chargebacks',
+                          checked as boolean
+                        )
+                      }
+                    />
+                    <label htmlFor="type-chargebacks" className="text-sm">
+                      Chargebacks
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-2">
+                    <Checkbox
+                      id="type-cashbacks"
+                      checked={localTransactionType.includes('cashbacks')}
+                      onCheckedChange={(checked) =>
+                        handleTransactionTypeChange(
+                          'cashbacks',
+                          checked as boolean
+                        )
+                      }
+                    />
+                    <label htmlFor="type-cashbacks" className="text-sm">
+                      Cashbacks
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-2">
+                    <Checkbox
+                      id="type-refer"
+                      checked={localTransactionType.includes('refer_earn')}
+                      onCheckedChange={(checked) =>
+                        handleTransactionTypeChange(
+                          'refer_earn',
+                          checked as boolean
+                        )
+                      }
+                    />
+                    <label htmlFor="type-refer" className="text-sm">
+                      Refer & Earn
+                    </label>
                   </div>
                 </div>
-              )}
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
+          {/* Transaction Status */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Transaction Status</label>
-            <div className="relative">
-              <button
-                className={`w-full flex items-center justify-between px-4 py-3 ${
-                  isStatusDropdownOpen
-                    ? 'border border-black rounded-lg'
-                    : 'bg-gray-100 rounded-lg'
-                }`}
-                onClick={() => {
-                  setIsStatusDropdownOpen(!isStatusDropdownOpen);
-                  setIsTypeDropdownOpen(false);
-                  setIsCalendarOpen(false);
-                }}
-              >
-                <span className="text-sm">{getStatusDisplayText()}</span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
-
-              {isStatusDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg border shadow-sm z-10">
-                  <div className="p-2">
-                    <div className="flex items-center space-x-2 p-2">
-                      <Checkbox
-                        id="status-successful"
-                        checked={localTransactionStatus.includes('successful')}
-                        onCheckedChange={(checked) =>
-                          handleTransactionStatusChange(
-                            'successful',
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <label htmlFor="status-successful" className="text-sm">
-                        Successful
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-2">
-                      <Checkbox
-                        id="status-pending"
-                        checked={localTransactionStatus.includes('pending')}
-                        onCheckedChange={(checked) =>
-                          handleTransactionStatusChange(
-                            'pending',
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <label htmlFor="status-pending" className="text-sm">
-                        Pending
-                      </label>
-                    </div>
-                    <div className="flex items-center space-x-2 p-2">
-                      <Checkbox
-                        id="status-failed"
-                        checked={localTransactionStatus.includes('failed')}
-                        onCheckedChange={(checked) =>
-                          handleTransactionStatusChange(
-                            'failed',
-                            checked as boolean
-                          )
-                        }
-                      />
-                      <label htmlFor="status-failed" className="text-sm">
-                        Failed
-                      </label>
-                    </div>
+            <Collapsible
+              open={isStatusDropdownOpen}
+              onOpenChange={setIsStatusDropdownOpen}
+              className="w-full"
+            >
+              <CollapsibleTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-between bg-muted/50"
+                >
+                  <span className="text-sm font-normal">
+                    {getStatusDisplayText()}
+                  </span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="mt-1 border rounded-lg p-2 bg-background">
+                <div className="space-y-1">
+                  <div className="flex items-center space-x-2 p-2">
+                    <Checkbox
+                      id="status-successful"
+                      checked={localTransactionStatus.includes('successful')}
+                      onCheckedChange={(checked) =>
+                        handleTransactionStatusChange(
+                          'successful',
+                          checked as boolean
+                        )
+                      }
+                    />
+                    <label htmlFor="status-successful" className="text-sm">
+                      Successful
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-2">
+                    <Checkbox
+                      id="status-pending"
+                      checked={localTransactionStatus.includes('pending')}
+                      onCheckedChange={(checked) =>
+                        handleTransactionStatusChange(
+                          'pending',
+                          checked as boolean
+                        )
+                      }
+                    />
+                    <label htmlFor="status-pending" className="text-sm">
+                      Pending
+                    </label>
+                  </div>
+                  <div className="flex items-center space-x-2 p-2">
+                    <Checkbox
+                      id="status-failed"
+                      checked={localTransactionStatus.includes('failed')}
+                      onCheckedChange={(checked) =>
+                        handleTransactionStatusChange(
+                          'failed',
+                          checked as boolean
+                        )
+                      }
+                    />
+                    <label htmlFor="status-failed" className="text-sm">
+                      Failed
+                    </label>
                   </div>
                 </div>
-              )}
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
         </div>
 
-        <div className="mt-6 flex items-center justify-between">
+        <DialogFooter className="flex justify-between sm:justify-between">
           <Button
             variant="outline"
-            className="px-6 py-2 rounded-full"
+            className="rounded-full"
             onClick={handleClear}
           >
             Clear
           </Button>
           <Button
             onClick={handleApply}
-            className="bg-black text-white hover:bg-black/90 px-6 py-2 rounded-full"
+            className="rounded-full bg-black text-white hover:bg-black/90"
           >
             Apply
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

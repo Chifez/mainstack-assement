@@ -1,16 +1,19 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import Image from 'next/image';
+import { ChevronDown, Download } from 'lucide-react';
+
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-import { ChevronDown, Download } from 'lucide-react';
-import { formatCurrency, formatDate } from '@/lib/utils';
-import { fetchTransactions } from '@/lib/api';
-import { Transaction } from '@/lib/types';
-import { useFilterStore } from '@/store/filter-store';
-import Image from 'next/image';
 
-export function TransactionList({ filters }: any) {
+import { formatDate } from '@/lib/utils';
+import { fetchTransactions } from '@/lib/api';
+import type { Transaction } from '@/lib/types';
+import { useFilterStore } from '@/store/filter-store';
+import { Badge } from '@/components/ui/badge';
+
+export function TransactionList({ filters }: { filters?: any[] }) {
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ['transactions'],
     queryFn: fetchTransactions,
@@ -18,7 +21,7 @@ export function TransactionList({ filters }: any) {
 
   const { setIsFilterOpen } = useFilterStore();
 
-  console.log('transactions', transactions);
+  const activeFiltersCount = filters?.length || 0;
 
   return (
     <div className="space-y-6">
@@ -27,32 +30,30 @@ export function TransactionList({ filters }: any) {
           <h2 className="text-2xl font-bold">
             {transactions?.length || 0} Transactions
           </h2>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground">
             Your transactions for the last 7 days
           </p>
         </div>
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            className="h-10 gap-2 rounded-full border border-gray-200 bg-[#EFF1F6] px-12"
+            className="h-10 gap-2 rounded-full px-6"
             onClick={() => setIsFilterOpen(true)}
           >
-            <span className="font-semibold flex items-center justify-center">
-              Filter{' '}
-              {filters && (
-                <span className="text-[8px] text-white size-2 flex items-center justify-center">
-                  {filters?.length}
-                </span>
-              )}
-            </span>
-            <ChevronDown className="size-3" />
+            <span className="font-medium">Filter</span>
+            {activeFiltersCount > 0 && (
+              <Badge
+                variant="secondary"
+                className="ml-1 h-5 w-5 rounded-full p-0 text-xs flex items-center justify-center"
+              >
+                {activeFiltersCount}
+              </Badge>
+            )}
+            <ChevronDown className="h-3 w-3" />
           </Button>
-          <Button
-            variant="outline"
-            className="h-10 gap-2 rounded-full border border-gray-200 w-fit px-12 bg-[#EFF1F6]"
-          >
-            <span className="font-semibold">Export list</span>
-            <Download className="size-3" />
+          <Button variant="outline" className="h-10 gap-2 rounded-full px-6">
+            <span className="font-medium">Export list</span>
+            <Download className="h-3 w-3" />
           </Button>
         </div>
       </div>
@@ -72,32 +73,7 @@ export function TransactionList({ filters }: any) {
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <div className="flex flex-col item-start">
-            <div className="mb-4 rounded-full bg-gray-100 w-fit p-3">
-              <Image
-                src="/receipt_long.svg"
-                height={16}
-                width={16}
-                alt="receipt"
-                priority
-              />
-            </div>
-            <h3 className="text-lg font-bold text-start">
-              No matching transaction found <br /> for the selected filter
-            </h3>
-            <p className="text-sm text-gray-500">
-              Change your filters to see more results, or add a new transaction
-            </p>
-            <Button
-              variant="outline"
-              className="mt-4 w-fit rounded-full bg-[#EFF1F6] font-semibold"
-              onClick={() => setIsFilterOpen(false)}
-            >
-              Clear Filter
-            </Button>
-          </div>
-        </div>
+        <EmptyTransactions onClearFilter={() => setIsFilterOpen(false)} />
       )}
     </div>
   );
@@ -107,18 +83,18 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'successful':
-        return 'text-[#0EA163]';
+        return 'text-emerald-600';
       case 'pending':
-        return 'text-[#A77A07]';
+        return 'text-amber-600';
       default:
-        return 'text-gray-500';
+        return 'text-muted-foreground';
     }
   };
 
   const getTransactionIcon = (type: string) => {
     if (type?.includes('withdrawal')) {
       return (
-        <div className="flex size-12 items-center justify-center rounded-full bg-[#F9E3E0] ">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
           <Image
             src="/call_made.svg"
             height={12}
@@ -130,12 +106,12 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
       );
     }
     return (
-      <div className="flex size-12 items-center justify-center rounded-full bg-[#E3FCF2]">
+      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
         <Image
           src="/call_received.svg"
           height={12}
           width={12}
-          alt="withdrawal"
+          alt="deposit"
           priority
         />
       </div>
@@ -148,27 +124,58 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
         {getTransactionIcon(transaction.type)}
         <div>
           <div className="font-medium">
-            {transaction.type == 'withdrawal'
+            {transaction.type === 'withdrawal'
               ? 'Cash Withdrawal'
               : transaction.metadata?.product_name || 'Unnamed Transaction'}
           </div>
           <div
             className={`text-sm ${
-              transaction.type == 'withdrawal' &&
+              transaction.type === 'withdrawal' &&
               getStatusColor(transaction.status)
             }`}
           >
-            {transaction.type == 'withdrawal'
+            {transaction.type === 'withdrawal'
               ? transaction.status
-              : transaction.metadata?.name || 'No name Provided'}
+              : transaction.metadata?.name || 'No name provided'}
           </div>
         </div>
       </div>
       <div className="text-right">
         <div className="font-medium">USD {transaction.amount}</div>
-        <div className="text-sm text-gray-500">
+        <div className="text-sm text-muted-foreground">
           {formatDate(transaction.date)}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function EmptyTransactions({ onClearFilter }: { onClearFilter: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center py-12 text-center">
+      <div className="flex flex-col items-start">
+        <div className="mb-4 rounded-full bg-muted w-fit p-3">
+          <Image
+            src="/receipt_long.svg"
+            height={16}
+            width={16}
+            alt="receipt"
+            priority
+          />
+        </div>
+        <h3 className="text-lg font-bold text-start">
+          No matching transaction found <br /> for the selected filter
+        </h3>
+        <p className="text-sm text-muted-foreground">
+          Change your filters to see more results, or add a new transaction
+        </p>
+        <Button
+          variant="outline"
+          className="mt-4 w-fit rounded-full font-medium"
+          onClick={onClearFilter}
+        >
+          Clear Filter
+        </Button>
       </div>
     </div>
   );
