@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
-import { CalendarIcon, ChevronDown, X } from 'lucide-react';
+import { CalendarIcon, ChevronDown, X, XIcon } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -31,6 +31,14 @@ import {
   type TransactionType,
   useFilterStore,
 } from '@/store/filter-store';
+import {
+  SheetContent,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+  Sheet,
+  SheetClose,
+} from '../ui/sheet';
 
 export function FilterModal() {
   const {
@@ -154,25 +162,20 @@ export function FilterModal() {
   };
 
   return (
-    <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-      <DialogContent className="sm:max-w-md rounded-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%]">
-        <DialogHeader>
+    <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+      <SheetContent className="sm:max-w-sm m-2 rounded-2xl p-4">
+        <SheetHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle className="text-xl font-bold">Filter</DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full"
-              onClick={() => setIsFilterOpen(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <SheetTitle className="text-xl font-bold">Filter</SheetTitle>
+            <SheetClose>
+              <XIcon className="size-4" />
+            </SheetClose>
           </div>
-        </DialogHeader>
+        </SheetHeader>
 
         <div className="space-y-6">
           {/* Quick date filters */}
-          <div className="flex flex-wrap gap-2">
+          <div className="flex gap-1">
             <Button
               variant="outline"
               size="sm"
@@ -465,22 +468,22 @@ export function FilterModal() {
           </div>
         </div>
 
-        <DialogFooter className="flex justify-between sm:justify-between">
+        <SheetFooter className="flex flex-row justify-between sm:justify-between ">
           <Button
             variant="outline"
-            className="rounded-full"
+            className="rounded-full flex-1"
             onClick={handleClear}
           >
             Clear
           </Button>
           <Button
             onClick={handleApply}
-            className="rounded-full bg-black text-white hover:bg-black/90"
+            className="rounded-full bg-black text-white hover:bg-black/90 flex-1"
           >
             Apply
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </SheetFooter>
+      </SheetContent>
+    </Sheet>
   );
 }
