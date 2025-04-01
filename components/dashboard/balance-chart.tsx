@@ -19,7 +19,10 @@ export function BalanceChart({ transactions }: BalanceChartProps) {
   const [chartPoints, setChartPoints] = useState<string>('');
 
   useEffect(() => {
-    if (!transactions || transactions.length === 0) return;
+    if (!transactions || transactions.length === 0) {
+      setChartPoints('M0,100 L700,100');
+      return;
+    }
 
     // Sort transactions by date
     const sortedTransactions = [...transactions].sort(
@@ -141,10 +144,7 @@ export function BalanceChart({ transactions }: BalanceChartProps) {
         preserveAspectRatio="none"
       >
         <path
-          d={
-            chartPoints ||
-            'M0,100 C100,20 200,180 300,60 C400,140 500,60 700,100'
-          }
+          d={chartPoints || 'M0,100 L700,100'}
           fill="none"
           stroke="#FF5403"
           strokeWidth="1"
