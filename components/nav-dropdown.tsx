@@ -44,18 +44,22 @@ export function NavDropdown({
           {label}
         </Link>
       </PopoverTrigger>
-      <PopoverContent className="w-fit px-2" align="start" sideOffset={10}>
-        <div className="py-2">
+      <PopoverContent
+        className="w-fit px-2"
+        align="start"
+        sideOffset={25}
+        alignOffset={0}
+      >
+        <div className="py-1 space-y-1">
           {items.map((item, index) => (
             <Link
               key={index}
               href={item.href}
               className={cn(
-                'flex items-center justify-between w-full py-3 px-2 transition-all group',
-                hoveredItem === item.label ? 'shadow-md rounded-md' : ''
+                'flex items-center justify-between w-full py-3 px-2 transition-all group hover:shadow-sm hover:border rounded-md'
               )}
-              onMouseEnter={() => setHoveredItem(item.label)}
-              onMouseLeave={() => setHoveredItem(null)}
+              // onMouseEnter={() => setHoveredItem(item.label)}
+              // onMouseLeave={() => setHoveredItem(null)}
             >
               <div className="flex items-center gap-2 hover:gap-1">
                 <div className="flex-shrink-0 mr-3 w-8 h-8 flex items-center justify-center rounded-md bg-white shadow">
@@ -66,7 +70,7 @@ export function NavDropdown({
                     height={20}
                   />
                 </div>
-                <div className="flex-grow">
+                <div className="">
                   <div className="font-medium">{item.label}</div>
                   <div className="text-sm text-gray-500">
                     {item.description}
@@ -75,10 +79,7 @@ export function NavDropdown({
               </div>
               <ChevronRight
                 className={cn(
-                  'h-4 w-4 text-gray-400 transition-all duration-200 ease-in-out',
-                  hoveredItem === item.label
-                    ? 'opacity-100 translate-x-0'
-                    : 'opacity-0 -translate-x-2'
+                  'h-4 w-4 text-gray-400 transition-all duration-200 ease-in-out group-hover:opacity-100 group-hover:translate-x-0 opacity-0 -translate-x-2'
                 )}
               />
             </Link>
