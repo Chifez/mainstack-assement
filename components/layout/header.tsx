@@ -22,6 +22,8 @@ import {
   RefreshCw,
   LogOut,
 } from 'lucide-react';
+import { homeItems, analyticsItems, crmItems, appsItems } from '@/lib/data';
+import { NavDropdown } from './nav-dropdown';
 
 export function Header() {
   const { data: user, isLoading } = useQuery<User>({
@@ -62,75 +64,56 @@ export function Header() {
             priority
           />
         </div>
-        <nav className="mx-auto flex items-center gap-6 flex-1">
+        <nav className="mx-auto flex items-center gap-4 flex-1">
+          <NavDropdown
+            label="Home"
+            icon="/home.svg"
+            activeIcon="/home-white.svg"
+            isActive={false}
+            items={homeItems}
+          />
+
+          <NavDropdown
+            label="Analytics"
+            icon="/analytics.svg"
+            activeIcon="/analytics-white.svg"
+            isActive={false}
+            items={analyticsItems}
+          />
+
           <Link
             href="#"
             className={cn(
-              'flex items-center justify-center gap-1.5 w-fit text-sm font-medium transition-colors hover:text-white hover:bg-black rounded-full px-6 py-2',
-              'text-gray-500'
+              'flex items-center justify-center gap-1.5 w-fit text-base font-semibold transition-colors bg-black text-white px-6 py-2 rounded-full'
             )}
           >
             <Image
-              src="/home.svg"
-              alt="Home Icon"
-              width={16}
-              height={16}
-              className="hover:fill-white"
-            />
-            Home
-          </Link>
-          <Link
-            href="#"
-            className={cn(
-              'flex items-center justify-center gap-1.5 w-fit text-sm font-medium transition-colors hover:text-white hover:bg-black rounded-full px-6 py-2',
-              'text-gray-500'
-            )}
-          >
-            <Image
-              src="/analytics.svg"
-              alt="Analytics Icon"
-              width={16}
-              height={16}
-            />
-            Analytics
-          </Link>
-          <Link
-            href="#"
-            className={cn(
-              'flex items-center justify-center gap-1.5 w-fit text-sm font-medium transition-colors hover:text-black/80 bg-black text-white px-6 py-2 rounded-full'
-            )}
-          >
-            <Image
-              src="/revenue.svg"
+              src="/revenue-white.svg"
               alt="Revenue Icon"
               width={16}
               height={16}
             />
             Revenue
           </Link>
-          <Link
-            href="#"
-            className={cn(
-              'flex items-center justify-center gap-1.5 w-fit text-sm font-medium transition-colors hover:text-white hover:bg-black rounded-full px-6 py-2',
-              'text-gray-500'
-            )}
-          >
-            <Image src="/crm.svg" alt="CRM Icon" width={16} height={16} />
-            CRM
-          </Link>
-          <Link
-            href="#"
-            className={cn(
-              'flex items-center justify-center gap-1.5 w-fit text-sm font-medium transition-colors hover:text-white hover:bg-black rounded-full px-6 py-2',
-              'text-gray-500'
-            )}
-          >
-            <Image src="/widgets.svg" alt="Apps Icon" width={16} height={16} />
-            Apps
-          </Link>
+
+          <NavDropdown
+            label="CRM"
+            icon="/crm.svg"
+            activeIcon="/crm-white.svg"
+            isActive={false}
+            items={crmItems}
+          />
+
+          <NavDropdown
+            label="Apps"
+            icon="/widgets.svg"
+            activeIcon="/widgets-white.svg"
+            isActive={false}
+            items={appsItems}
+          />
         </nav>
-        <div className="mr-auto flex items-center justify-end gap-4 w-full">
-          <button className="rounded-full p-2 hover:bg-gray-100">
+        <div className="mr-auto flex items-center justify-end gap-6 w-full">
+          <button className="rounded-full p-2 hover:bg-gray-100 group">
             <Image
               src="/notifications.svg"
               alt="Notifications"
@@ -138,7 +121,7 @@ export function Header() {
               height={16}
             />
           </button>
-          <button className="rounded-full p-2 hover:bg-gray-100">
+          <button className="rounded-full p-2 hover:bg-gray-100 group">
             <Image src="/chat.svg" alt="Chat" width={20} height={20} />
           </button>
 
@@ -177,16 +160,20 @@ export function Header() {
                     <div className="flex items-center gap-3">
                       <Avatar className="h-10 w-10">
                         <AvatarFallback className="bg-gradient-to-b to-[#131316] from-[#5C6670] text-white font-semibold">
-                          {user?.first_name?.charAt(0)}
-                          {user?.last_name?.charAt(0)}
+                          {user
+                            ? user?.first_name?.charAt(0) +
+                              user?.last_name?.charAt(0)
+                            : 'MS'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">
-                          {user?.first_name} {user?.last_name}
+                          {user
+                            ? user?.first_name + user?.last_name
+                            : 'Main stack'}
                         </div>
                         <div className="text-sm text-gray-500">
-                          {user?.email}
+                          {user ? user?.email : 'mainstack@example.com'}
                         </div>
                       </div>
                     </div>

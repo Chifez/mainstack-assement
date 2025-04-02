@@ -42,10 +42,10 @@ export function TransactionList({ filters }: { filters?: any[] }) {
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
-            className="h-10 gap-2 rounded-full px-6"
+            className="h-10 gap-2 rounded-full px-6 bg-[#EFF1F6]"
             onClick={() => setIsFilterOpen(true)}
           >
-            <span className="font-medium">Filter</span>
+            <span className="font-semibold">Filter</span>
             {activeFiltersCount > 0 && (
               <span className="bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
                 {activeFiltersCount}
@@ -53,9 +53,12 @@ export function TransactionList({ filters }: { filters?: any[] }) {
             )}
             <ChevronDown className="h-3 w-3" />
           </Button>
-          <Button variant="outline" className="h-10 gap-2 rounded-full px-6">
-            <span className="font-medium">Export list</span>
-            <Download className="h-3 w-3" />
+          <Button
+            variant="outline"
+            className="h-10 gap-2 rounded-full px-6 bg-[#EFF1F6]"
+          >
+            <span className="font-semibold">Export list</span>
+            <Download className="size-3" strokeWidth={1} />
           </Button>
         </div>
       </div>
@@ -143,7 +146,7 @@ function TransactionItem({ transaction }: { transaction: Transaction }) {
         </div>
       </div>
       <div className="text-right">
-        <div className="font-medium">USD {transaction.amount}</div>
+        <div className="text-base font-bold">USD {transaction.amount}</div>
         <div className="text-sm text-muted-foreground">
           {formatDate(transaction.date)}
         </div>

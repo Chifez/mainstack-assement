@@ -27,3 +27,18 @@ export interface Transaction {
   type: string;
   date: string;
 }
+
+export interface NavItem {
+  icon: string;
+  label: string;
+  description: string;
+  href: string;
+}
+
+export interface NavDropdownProps {
+  label: string;
+  icon: string;
+  activeIcon: string;
+  isActive: boolean;
+  items: NavItem[];
+}

@@ -163,7 +163,7 @@ export function FilterModal() {
 
   return (
     <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-      <SheetContent className="sm:max-w-sm m-2 rounded-2xl p-4">
+      <SheetContent className="sm:max-w-sm h-[97.5%] rounded-2xl m-2 p-4">
         <SheetHeader>
           <div className="flex items-center justify-between">
             <SheetTitle className="text-xl font-bold">Filter</SheetTitle>
@@ -248,7 +248,10 @@ export function FilterModal() {
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
+                <PopoverContent
+                  className="w-full flex justify-center p-0"
+                  align="start"
+                >
                   <Calendar
                     mode="range"
                     selected={localDateRange}
@@ -289,7 +292,7 @@ export function FilterModal() {
             <Collapsible
               open={isTypeDropdownOpen}
               onOpenChange={setIsTypeDropdownOpen}
-              className="w-full"
+              className="relative w-full"
             >
               <CollapsibleTrigger asChild>
                 <Button
@@ -302,7 +305,7 @@ export function FilterModal() {
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-1 border rounded-lg p-2 bg-background">
+              <CollapsibleContent className="transition-all z-50 absolute w-full mt-1 border rounded-lg p-2 bg-background">
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2 p-2">
                     <Checkbox
@@ -397,7 +400,7 @@ export function FilterModal() {
           </div>
 
           {/* Transaction Status */}
-          <div className="space-y-2">
+          <div className="relative space-y-2">
             <label className="text-sm font-medium">Transaction Status</label>
             <Collapsible
               open={isStatusDropdownOpen}
@@ -415,7 +418,7 @@ export function FilterModal() {
                   <ChevronDown className="h-4 w-4" />
                 </Button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="mt-1 border rounded-lg p-2 bg-background">
+              <CollapsibleContent className="ransition-all absolute w-full mt-1 border rounded-lg p-2 bg-background">
                 <div className="space-y-1">
                   <div className="flex items-center space-x-2 p-2">
                     <Checkbox
