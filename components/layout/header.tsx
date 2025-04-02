@@ -21,6 +21,7 @@ import {
   AlertCircle,
   RefreshCw,
   LogOut,
+  Bug,
 } from 'lucide-react';
 import { homeItems, analyticsItems, crmItems, appsItems } from '@/lib/data';
 import { NavDropdown } from './nav-dropdown';
@@ -41,7 +42,7 @@ export function Header() {
     { icon: <Users className="h-4 w-4" />, label: 'Refer and Earn', href: '#' },
     { icon: <Grid className="h-4 w-4" />, label: 'Integrations', href: '#' },
     {
-      icon: <AlertCircle className="h-4 w-4" />,
+      icon: <Bug className="h-4 w-4" />,
       label: 'Report Bug',
       href: '#',
     },

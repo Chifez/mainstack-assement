@@ -58,7 +58,7 @@ export function NavDropdown({
               onMouseLeave={() => setHoveredItem(null)}
             >
               <div className="flex items-center gap-2 hover:gap-1">
-                <div className="flex-shrink-0 mr-3 w-8 h-8 flex items-center justify-center rounded-md bg-gray-100">
+                <div className="flex-shrink-0 mr-3 w-8 h-8 flex items-center justify-center rounded-md bg-white shadow">
                   <Image
                     src={item.icon || '/placeholder.svg'}
                     alt=""

@@ -2,19 +2,19 @@ import { NavItem } from './types';
 
 export const homeItems: NavItem[] = [
   {
-    icon: '/icons/dashboard.svg',
+    icon: '/product_one.svg',
     label: 'Dashboard',
     description: 'Overview of your account',
     href: '#',
   },
   {
-    icon: '/icons/activity.svg',
+    icon: '/product_one.svg',
     label: 'Activity',
     description: 'Your recent activities',
     href: '#',
   },
   {
-    icon: '/icons/links.svg',
+    icon: '/product_two.svg',
     label: 'Links',
     description: 'Manage your links',
     href: '#',
@@ -23,19 +23,19 @@ export const homeItems: NavItem[] = [
 
 export const analyticsItems: NavItem[] = [
   {
-    icon: '/icons/performance.svg',
+    icon: '/product_one.svg',
     label: 'Performance',
     description: 'View your analytics data',
     href: '#',
   },
   {
-    icon: '/icons/audience.svg',
+    icon: '/product_two.svg',
     label: 'Audience',
     description: 'Understand your audience',
     href: '#',
   },
   {
-    icon: '/icons/traffic.svg',
+    icon: '/product_three.svg',
     label: 'Traffic Sources',
     description: 'Where your visitors come from',
     href: '#',
@@ -44,19 +44,19 @@ export const analyticsItems: NavItem[] = [
 
 export const crmItems: NavItem[] = [
   {
-    icon: '/icons/contacts.svg',
+    icon: '/product_one.svg',
     label: 'Contacts',
     description: 'Manage your contacts',
     href: '#',
   },
   {
-    icon: '/icons/leads.svg',
+    icon: '/product_two.svg',
     label: 'Leads',
     description: 'Track potential customers',
     href: '#',
   },
   {
-    icon: '/icons/emails.svg',
+    icon: '/product_three.svg',
     label: 'Emails',
     description: 'Email campaigns and templates',
     href: '#',
@@ -65,19 +65,19 @@ export const crmItems: NavItem[] = [
 
 export const appsItems: NavItem[] = [
   {
-    icon: '/icons/store.svg',
+    icon: '/product_four.svg',
     label: 'App Store',
     description: 'Browse available applications',
     href: '#',
   },
   {
-    icon: '/icons/installed.svg',
+    icon: '/product_one.svg',
     label: 'Installed Apps',
     description: 'Manage your installed apps',
     href: '#',
   },
   {
-    icon: '/icons/integration.svg',
+    icon: '/product_three.svg',
     label: 'Integrations',
     description: 'Connect with other services',
     href: '#',
