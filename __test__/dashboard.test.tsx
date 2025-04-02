@@ -6,13 +6,13 @@ import { WalletInfo } from '@/components/dashboard/wallet-info';
 import { TransactionList } from '@/components/dashboard/transaction-list';
 import * as api from '@/lib/api';
 
-// Mock the API calls
+// Mocking the API calls
 jest.mock('@/lib/api', () => ({
   fetchWallet: jest.fn(),
   fetchTransactions: jest.fn(),
 }));
 
-// Create a wrapper with QueryClientProvider
+// To use react query here i would just create a wrapper with QueryClientProvider
 const createWrapper = () => {
   const queryClient = new QueryClient({
     defaultOptions: {

@@ -21,6 +21,14 @@ const degular = localFont({
 export const metadata: Metadata = {
   title: 'Mainstack - Financial Dashboard',
   description: 'Mainstack Frontend Assessment',
+  openGraph: {
+    title: 'Mainstack - Financial Dashboard',
+    description: 'Mainstack Frontend Assessment',
+    type: 'website',
+    locale: 'en-US',
+    // url: '',
+  },
+  // metadataBase: new URL(''),
 };
 
 export default function RootLayout({
@@ -33,9 +41,7 @@ export default function RootLayout({
       <body
         className={`${degular.variable} ${inter.variable} ${dmSans.variable} font-degular antialiased`}
       >
-        {/* <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange> */}
         <QueryProvider>{children}</QueryProvider>
-        {/* </ThemeProvider> */}
       </body>
     </html>
   );

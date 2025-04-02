@@ -39,6 +39,10 @@ import {
   Sheet,
   SheetClose,
 } from '../ui/sheet';
+import { QuickFilterButton } from './filter/quick-filter-button';
+import { DateRangePicker } from './filter/date-range-picker';
+import { TransactionTypeFilter } from './filter/transaction-type-filter';
+import { TransactionStatusFilter } from './filter/transaction-status-filter';
 
 export function FilterModal() {
   const {
@@ -50,10 +54,9 @@ export function FilterModal() {
     setDateRange,
     setTransactionType,
     setTransactionStatus,
-    resetFilters,
   } = useFilterStore();
 
-  const [localDateRange, setLocalDateRange] = useState<DateRange>(dateRange);
+  const [localDateRange, setLocalDateRange] = useState(dateRange);
   const [localTransactionType, setLocalTransactionType] =
     useState<TransactionType[]>(transactionType);
   const [localTransactionStatus, setLocalTransactionStatus] =
@@ -66,11 +69,6 @@ export function FilterModal() {
     setLocalTransactionStatus(transactionStatus);
   }, [dateRange, transactionType, transactionStatus]);
 
-  // UI state for dropdowns
-  const [isTypeDropdownOpen, setIsTypeDropdownOpen] = useState(false);
-  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
-  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
-
   const handleApply = () => {
     setDateRange(localDateRange);
     setTransactionType(localTransactionType);
@@ -82,6 +80,10 @@ export function FilterModal() {
     setLocalDateRange({ from: undefined, to: undefined });
     setLocalTransactionType(['all']);
     setLocalTransactionStatus(['all']);
+    // Reset the store filters
+    setDateRange({ from: undefined, to: undefined });
+    setTransactionType(['all']);
+    setTransactionStatus(['all']);
   };
 
   const handleTransactionTypeChange = (
@@ -114,52 +116,13 @@ export function FilterModal() {
     }
   };
 
-  const getTypeDisplayText = () => {
-    if (
-      localTransactionType.includes('all') &&
-      localTransactionType.length === 1
-    ) {
-      return 'Store Transactions';
-    }
-
-    const typeNames = {
-      all: 'Store Transactions',
-      get_tipped: 'Get Tipped',
-      withdrawals: 'Withdrawals',
-      chargebacks: 'Chargebacks',
-      cashbacks: 'Cashbacks',
-      refer_earn: 'Refer & Earn',
-    };
-
-    const selectedTypes = localTransactionType.map(
-      (type) => typeNames[type as keyof typeof typeNames]
-    );
-
-    if (selectedTypes.length > 1) {
-      return `${selectedTypes.join(', ').substring(0, 20)}...`;
-    }
-
-    return selectedTypes[0] || 'Store Transactions';
-  };
-
-  const getStatusDisplayText = () => {
-    if (
-      localTransactionStatus.includes('all') &&
-      localTransactionStatus.length === 1
-    ) {
-      return 'Successful, Pending, Failed';
-    }
-
-    const statusNames = {
-      successful: 'Successful',
-      pending: 'Pending',
-      failed: 'Failed',
-    };
-
-    return localTransactionStatus
-      .map((status) => statusNames[status as keyof typeof statusNames])
-      .join(', ');
-  };
+  const hasActiveFilters =
+    localDateRange.from ||
+    localDateRange.to ||
+    (localTransactionType.length > 0 &&
+      !localTransactionType.includes('all')) ||
+    (localTransactionStatus.length > 0 &&
+      !localTransactionStatus.includes('all'));
 
   return (
     <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
@@ -176,302 +139,59 @@ export function FilterModal() {
         <div className="space-y-6">
           {/* Quick date filters */}
           <div className="flex gap-1">
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn('rounded-full', !localDateRange.from && 'bg-muted')}
+            <QuickFilterButton
+              label="Today"
               onClick={() =>
                 setLocalDateRange({ from: undefined, to: undefined })
               }
-            >
-              Today
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full"
+              isActive={!localDateRange.from}
+            />
+            <QuickFilterButton
+              label="Last 7 days"
               onClick={() => {
                 const today = new Date();
                 const lastWeek = new Date(today);
                 lastWeek.setDate(today.getDate() - 7);
                 setLocalDateRange({ from: lastWeek, to: today });
               }}
-            >
-              Last 7 days
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full"
+            />
+            <QuickFilterButton
+              label="This month"
               onClick={() => {
                 const today = new Date();
                 const lastMonth = new Date(today);
                 lastMonth.setMonth(today.getMonth() - 1);
                 setLocalDateRange({ from: lastMonth, to: today });
               }}
-            >
-              This month
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="rounded-full"
+            />
+            <QuickFilterButton
+              label="Last 3 months"
               onClick={() => {
                 const today = new Date();
                 const lastThreeMonths = new Date(today);
                 lastThreeMonths.setMonth(today.getMonth() - 3);
                 setLocalDateRange({ from: lastThreeMonths, to: today });
               }}
-            >
-              Last 3 months
-            </Button>
+            />
           </div>
 
-          {/* Date Range */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Date Range</label>
-            <div className="grid grid-cols-2 gap-2">
-              <Popover open={isCalendarOpen} onOpenChange={setIsCalendarOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      'justify-start text-left font-normal bg-muted/50',
-                      !localDateRange.from && 'text-muted-foreground'
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {localDateRange.from ? (
-                      format(localDateRange.from, 'dd MMM yyyy')
-                    ) : (
-                      <span>From date</span>
-                    )}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent
-                  className="w-full flex justify-center p-0"
-                  align="start"
-                >
-                  <Calendar
-                    mode="range"
-                    selected={localDateRange}
-                    onSelect={(range) =>
-                      setLocalDateRange({
-                        from: range?.from,
-                        to: range?.to,
-                      })
-                    }
-                    initialFocus
-                    numberOfMonths={1}
-                    className="w-full"
-                  />
-                </PopoverContent>
-              </Popover>
+          <DateRangePicker
+            dateRange={localDateRange}
+            onDateRangeChange={setLocalDateRange}
+          />
 
-              <Button
-                variant="outline"
-                className={cn(
-                  'justify-start text-left font-normal bg-muted/50',
-                  !localDateRange.to && 'text-muted-foreground'
-                )}
-                onClick={() => setIsCalendarOpen(true)}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {localDateRange.to ? (
-                  format(localDateRange.to, 'dd MMM yyyy')
-                ) : (
-                  <span>To date</span>
-                )}
-              </Button>
-            </div>
-          </div>
+          <TransactionTypeFilter
+            selectedTypes={localTransactionType}
+            onTypeChange={handleTransactionTypeChange}
+          />
 
-          {/* Transaction Type */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Transaction Type</label>
-            <Collapsible
-              open={isTypeDropdownOpen}
-              onOpenChange={setIsTypeDropdownOpen}
-              className="relative w-full"
-            >
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-between bg-muted/50"
-                >
-                  <span className="text-sm font-normal">
-                    {getTypeDisplayText()}
-                  </span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="transition-all z-50 absolute w-full mt-1 border rounded-lg p-2 bg-background">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2 p-2">
-                    <Checkbox
-                      id="type-store"
-                      checked={localTransactionType.includes('all')}
-                      onCheckedChange={(checked) =>
-                        handleTransactionTypeChange('all', checked as boolean)
-                      }
-                    />
-                    <label htmlFor="type-store" className="text-sm">
-                      Store Transactions
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-2">
-                    <Checkbox
-                      id="type-tipped"
-                      checked={localTransactionType.includes('get_tipped')}
-                      onCheckedChange={(checked) =>
-                        handleTransactionTypeChange(
-                          'get_tipped',
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <label htmlFor="type-tipped" className="text-sm">
-                      Get Tipped
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-2">
-                    <Checkbox
-                      id="type-withdrawals"
-                      checked={localTransactionType.includes('withdrawals')}
-                      onCheckedChange={(checked) =>
-                        handleTransactionTypeChange(
-                          'withdrawals',
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <label htmlFor="type-withdrawals" className="text-sm">
-                      Withdrawals
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-2">
-                    <Checkbox
-                      id="type-chargebacks"
-                      checked={localTransactionType.includes('chargebacks')}
-                      onCheckedChange={(checked) =>
-                        handleTransactionTypeChange(
-                          'chargebacks',
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <label htmlFor="type-chargebacks" className="text-sm">
-                      Chargebacks
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-2">
-                    <Checkbox
-                      id="type-cashbacks"
-                      checked={localTransactionType.includes('cashbacks')}
-                      onCheckedChange={(checked) =>
-                        handleTransactionTypeChange(
-                          'cashbacks',
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <label htmlFor="type-cashbacks" className="text-sm">
-                      Cashbacks
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-2">
-                    <Checkbox
-                      id="type-refer"
-                      checked={localTransactionType.includes('refer_earn')}
-                      onCheckedChange={(checked) =>
-                        handleTransactionTypeChange(
-                          'refer_earn',
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <label htmlFor="type-refer" className="text-sm">
-                      Refer & Earn
-                    </label>
-                  </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
-
-          {/* Transaction Status */}
-          <div className="relative space-y-2">
-            <label className="text-sm font-medium">Transaction Status</label>
-            <Collapsible
-              open={isStatusDropdownOpen}
-              onOpenChange={setIsStatusDropdownOpen}
-              className="w-full"
-            >
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="w-full justify-between bg-muted/50"
-                >
-                  <span className="text-sm font-normal">
-                    {getStatusDisplayText()}
-                  </span>
-                  <ChevronDown className="h-4 w-4" />
-                </Button>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="ransition-all absolute w-full mt-1 border rounded-lg p-2 bg-background">
-                <div className="space-y-1">
-                  <div className="flex items-center space-x-2 p-2">
-                    <Checkbox
-                      id="status-successful"
-                      checked={localTransactionStatus.includes('successful')}
-                      onCheckedChange={(checked) =>
-                        handleTransactionStatusChange(
-                          'successful',
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <label htmlFor="status-successful" className="text-sm">
-                      Successful
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-2">
-                    <Checkbox
-                      id="status-pending"
-                      checked={localTransactionStatus.includes('pending')}
-                      onCheckedChange={(checked) =>
-                        handleTransactionStatusChange(
-                          'pending',
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <label htmlFor="status-pending" className="text-sm">
-                      Pending
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2 p-2">
-                    <Checkbox
-                      id="status-failed"
-                      checked={localTransactionStatus.includes('failed')}
-                      onCheckedChange={(checked) =>
-                        handleTransactionStatusChange(
-                          'failed',
-                          checked as boolean
-                        )
-                      }
-                    />
-                    <label htmlFor="status-failed" className="text-sm">
-                      Failed
-                    </label>
-                  </div>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
-          </div>
+          <TransactionStatusFilter
+            selectedStatuses={localTransactionStatus}
+            onStatusChange={handleTransactionStatusChange}
+          />
         </div>
 
-        <SheetFooter className="flex flex-row justify-between sm:justify-between ">
+        <SheetFooter className="flex flex-row justify-between sm:justify-between">
           <Button
             variant="outline"
             className="rounded-full flex-1"
@@ -482,6 +202,7 @@ export function FilterModal() {
           <Button
             onClick={handleApply}
             className="rounded-full bg-black text-white hover:bg-black/90 flex-1"
+            disabled={!hasActiveFilters}
           >
             Apply
           </Button>

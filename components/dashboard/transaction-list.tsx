@@ -19,8 +19,15 @@ export function TransactionList({ filters }: { filters?: any[] }) {
     queryFn: fetchTransactions,
   });
 
-  const { setIsFilterOpen, dateRange, transactionType, transactionStatus } =
-    useFilterStore();
+  const {
+    setIsFilterOpen,
+    dateRange,
+    transactionType,
+    transactionStatus,
+    setDateRange,
+    setTransactionType,
+    setTransactionStatus,
+  } = useFilterStore();
 
   const activeFiltersCount = [
     dateRange.from || dateRange.to ? 1 : 0,
@@ -28,12 +35,44 @@ export function TransactionList({ filters }: { filters?: any[] }) {
     transactionStatus.length > 0 && !transactionStatus.includes('all') ? 1 : 0,
   ].reduce((acc, curr) => acc + curr, 0);
 
+  const filteredTransactions = transactions?.filter((transaction) => {
+    // Date range filter
+    if (dateRange.from && dateRange.to) {
+      const transactionDate = new Date(transaction.date);
+      if (transactionDate < dateRange.from || transactionDate > dateRange.to) {
+        return false;
+      }
+    }
+
+    // Transaction type filter
+    if (transactionType.length > 0 && !transactionType.includes('all')) {
+      if (!transactionType.includes(transaction?.type as any)) {
+        return false;
+      }
+    }
+
+    // Transaction status filter
+    if (transactionStatus.length > 0 && !transactionStatus.includes('all')) {
+      if (!transactionStatus.includes(transaction.status)) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+
+  const handleClearFilters = () => {
+    setDateRange({ from: undefined, to: undefined });
+    setTransactionType(['all']);
+    setTransactionStatus(['all']);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-300 pb-4">
         <div>
           <h2 className="text-2xl font-bold">
-            {transactions?.length || 0} Transactions
+            {filteredTransactions?.length || 0} Transactions
           </h2>
           <p className="text-sm text-muted-foreground">
             Your transactions for the last 7 days
@@ -71,14 +110,14 @@ export function TransactionList({ filters }: { filters?: any[] }) {
               <Skeleton key={i} className="h-16 w-full" />
             ))}
         </div>
-      ) : transactions && transactions.length > 0 ? (
+      ) : filteredTransactions && filteredTransactions.length > 0 ? (
         <div className="space-y-6">
-          {transactions.map((transaction, index) => (
+          {filteredTransactions.map((transaction, index) => (
             <TransactionItem key={index} transaction={transaction} />
           ))}
         </div>
       ) : (
-        <EmptyTransactions onClearFilter={() => setIsFilterOpen(false)} />
+        <EmptyTransactions onClearFilter={handleClearFilters} />
       )}
     </div>
   );

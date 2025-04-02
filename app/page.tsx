@@ -1,4 +1,4 @@
-import { Header } from '@/components/layout/header';
+import { Header } from '@/components/navbar';
 import { BalanceCard } from '@/components/dashboard/balance-card';
 import { WalletInfo } from '@/components/dashboard/wallet-info';
 import { TransactionList } from '@/components/dashboard/transaction-list';
