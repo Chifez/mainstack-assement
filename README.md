@@ -1,27 +1,26 @@
 # Mainstack Frontend Assessment
 
-A modern transaction management dashboard built as part of a frontend role assessment at Mainstack. This application demonstrates the implementation of a clean, efficient, and user-friendly interface for managing and filtering financial transactions.
+This is a modern transaction management dashboard built as part of a frontend role assessment at Mainstack. This application demonstrates the implementation of a clean, efficient, and user-friendly interface for managing and filtering financial transactions.
 
 ## Features
 
-- 📊 Transaction dashboard with real-time data
-- 🔍 Advanced filtering capabilities
+- Transaction dashboard with real-time data
+- Advanced filtering capabilities
   - Date range selection
   - Transaction type filtering
   - Transaction status filtering
-- 📱 Responsive design for all screen sizes
 - 🎨 Modern and clean UI with smooth animations
-- ⚡ Fast and efficient data fetching with caching
+- ⚡ Fast and efficient data fetching with caching by tanstack query
 
 ## Tech Stack
+
+The general idea behind the stack was for convenience, out of the box tooling and optimization techniques and ease of development to beat the deadline 
 
 ### Core Technologies
 
 - **Next.js 14** - React framework for production
 
   - App Router for better performance and SEO
-  - Server Components for improved initial page load
-  - Built-in API routes for backend functionality
 
 - **TypeScript** - For type safety and better developer experience
   - Ensures code reliability and maintainability
@@ -40,8 +39,6 @@ A modern transaction management dashboard built as part of a frontend role asses
 - **TanStack Query (React Query)** - Data fetching and caching
   - Automatic background data updates
   - Built-in caching and invalidation
-  - Optimistic updates
-  - Error handling and retry logic
 
 ### Styling
 
@@ -57,50 +54,6 @@ A modern transaction management dashboard built as part of a frontend role asses
   - Customizable and themeable
   - Built on top of Tailwind CSS
   - Copy-paste components for faster development
-
-## Why These Technologies?
-
-### Next.js
-
-- Provides an excellent developer experience
-- Offers built-in performance optimizations
-- Enables server-side rendering and static site generation
-- Great for SEO and initial page load performance
-
-### TypeScript
-
-- Adds type safety to JavaScript
-- Helps catch errors during development
-- Improves code maintainability
-- Better IDE support and developer experience
-
-### Zustand
-
-- Simpler alternative to Redux
-- Less boilerplate code
-- Easy to understand and implement
-- Perfect for small to medium-sized applications
-
-### TanStack Query
-
-- Handles complex data fetching scenarios
-- Provides automatic caching and background updates
-- Reduces boilerplate for data fetching logic
-- Great developer experience with built-in devtools
-
-### Tailwind CSS
-
-- Speeds up UI development
-- Ensures consistent styling
-- Reduces CSS bundle size
-- Highly customizable and maintainable
-
-### shadcn/ui
-
-- Provides accessible components out of the box
-- Built on top of Radix UI for accessibility
-- Easy to customize and theme
-- Reduces development time with pre-built components
 
 ## Project Structure
 
