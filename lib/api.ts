@@ -1,7 +1,5 @@
-const BASE_URL = 'https://fe-task-api.mainstack.io';
-
 export async function fetchUser() {
-  const response = await fetch(`${BASE_URL}/user`);
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/user`);
   if (!response.ok) {
     throw new Error('Failed to fetch user data');
   }
@@ -9,7 +7,7 @@ export async function fetchUser() {
 }
 
 export async function fetchWallet() {
-  const response = await fetch(`${BASE_URL}/wallet`);
+  const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/wallet`);
   if (!response.ok) {
     throw new Error('Failed to fetch wallet data');
   }
@@ -18,7 +16,9 @@ export async function fetchWallet() {
 
 export async function fetchTransactions() {
   try {
-    const response = await fetch(`${BASE_URL}/transactions`);
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/transactions`
+    );
     if (!response.ok) {
       throw new Error('Failed to fetch transactions');
     }

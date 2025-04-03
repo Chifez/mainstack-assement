@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import Image from 'next/image';
 import { ChevronDown, Download } from 'lucide-react';
+import { format, differenceInDays, isThisMonth } from 'date-fns';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -34,6 +35,40 @@ export function TransactionList({ filters }: { filters?: any[] }) {
     transactionType.length > 0 && !transactionType.includes('all') ? 1 : 0,
     transactionStatus.length > 0 && !transactionStatus.includes('all') ? 1 : 0,
   ].reduce((acc, curr) => acc + curr, 0);
+
+  const getFilterText = () => {
+    if (!dateRange.from && !dateRange.to) {
+      return 'Your transactions for All time';
+    }
+
+    if (dateRange.from && dateRange.to) {
+      const days = differenceInDays(dateRange.to, dateRange.from);
+
+      if (days === 7) {
+        return 'Your transactions for the last 7 days';
+      }
+
+      if (days === 30) {
+        return 'Your transactions for the last 30 days';
+      }
+
+      if (isThisMonth(dateRange.from) && isThisMonth(dateRange.to)) {
+        return 'Your transactions for This month';
+      }
+      return `Your transactions from ${formatDate(
+        dateRange.from.toString()
+      )} to ${formatDate(dateRange.to.toString())}`;
+    }
+    if (dateRange.from) {
+      return `Your transactions from ${formatDate(dateRange.from.toString())}`;
+    }
+
+    if (dateRange.to) {
+      return `Your transactions until ${formatDate(dateRange.to.toString())}`;
+    }
+
+    return 'Your transactions for All time';
+  };
 
   const filteredTransactions = transactions?.filter((transaction) => {
     // Date range filter
@@ -74,9 +109,7 @@ export function TransactionList({ filters }: { filters?: any[] }) {
           <h2 className="text-2xl font-bold">
             {filteredTransactions?.length || 0} Transactions
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Your transactions for the last 7 days
-          </p>
+          <p className="text-sm text-muted-foreground">{getFilterText()}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button
@@ -198,7 +231,7 @@ function EmptyTransactions({ onClearFilter }: { onClearFilter: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="flex flex-col items-start">
-        <div className="mb-4 rounded-full bg-muted w-fit p-3">
+        <div className="mb-4 rounded-xl bg-muted w-fit p-4">
           <Image
             src="/receipt_long.svg"
             height={16}
@@ -215,7 +248,7 @@ function EmptyTransactions({ onClearFilter }: { onClearFilter: () => void }) {
         </p>
         <Button
           variant="outline"
-          className="mt-4 w-fit rounded-full font-medium"
+          className="mt-4 w-fit rounded-full font-semibold bg-[#eff1f5]"
           onClick={onClearFilter}
         >
           Clear Filter

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -19,31 +19,46 @@ export function NavDropdown({
   isActive,
   items,
 }: NavDropdownProps) {
-  const [isHovered, setIsHovered] = useState(false);
-  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={() => setIsOpen(!isOpen)}>
       <PopoverTrigger asChild>
         <Link
           href="#"
           className={cn(
             'flex items-center justify-center gap-1.5 text-base font-semibold transition-colors rounded-full px-6 py-2',
-            'text-gray-500 hover:text-black hover:bg-[#EFF1F6]',
-            isActive && 'bg-black text-white'
+            'text-gray-500 ',
+            isOpen
+              ? 'bg-black text-white hover:text-white hover:bg-black'
+              : 'hover:text-black hover:bg-[#EFF1F6]'
           )}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
+          onClick={() => setIsOpen(isOpen)}
         >
           <Image
-            src={isActive ? activeIcon : icon}
+            src={isOpen ? activeIcon : icon}
             alt={`${label} Icon`}
             width={16}
             height={16}
           />
           {label}
+          {/* {isOpen && (
+            <span className="flex items-center gap-2 font-light text-sm">
+              |
+              <span className="flex items-center mr-2">
+                {label}
+                <ChevronUp
+                  className={cn(
+                    'h-4 w-4 ml-1 transition-transform',
+                    isOpen && 'transform rotate-180'
+                  )}
+                />
+              </span>
+            </span>
+          )} */}
         </Link>
       </PopoverTrigger>
+
       <PopoverContent
         className="w-fit px-2"
         align="start"
@@ -56,13 +71,13 @@ export function NavDropdown({
               key={index}
               href={item.href}
               className={cn(
-                'flex items-center justify-between w-full py-3 px-2 transition-all group hover:shadow-sm hover:border rounded-md'
+                'flex items-center justify-between w-full py-3 px-2 transition-all group hover:shadow-sm hover:border rounded-xl'
               )}
               // onMouseEnter={() => setHoveredItem(item.label)}
               // onMouseLeave={() => setHoveredItem(null)}
             >
               <div className="flex items-center gap-2 hover:gap-1">
-                <div className="flex-shrink-0 mr-3 w-8 h-8 flex items-center justify-center rounded-md bg-white shadow">
+                <div className="flex-shrink-0 mr-1 w-8 h-8 flex items-center justify-center rounded-md bg-white shadow">
                   <Image
                     src={item.icon || '/placeholder.svg'}
                     alt=""
