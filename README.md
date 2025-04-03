@@ -9,8 +9,8 @@ This is a modern transaction management dashboard built as part of a frontend ro
   - Date range selection
   - Transaction type filtering
   - Transaction status filtering
-- 🎨 Modern and clean UI with smooth animations
-- ⚡ Fast and efficient data fetching with caching by tanstack query
+- Modern and clean UI components with smooth animations
+- Fast and efficient data fetching with caching by tanstack query
 
 ## Tech Stack
 
