@@ -6,8 +6,10 @@
 //   return response.json();
 // }
 
+import { TraceState } from 'next/dist/trace';
 import { transactions, user, wallet } from './data';
 import { delay } from './helpers';
+import { Transaction } from './types';
 
 // export async function fetchWallet() {
 //   const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/wallet`);
@@ -69,5 +71,71 @@ export async function fetchTransactions() {
     return JSON.parse(JSON.stringify(transactions));
   } catch (error) {
     console.log('error', error);
+  }
+}
+
+interface WithdrawalRequest {
+  amount: number;
+  vatAmount: number;
+  totalAmount: number;
+}
+
+export async function handleWithdrawal({
+  amount,
+  vatAmount,
+  totalAmount,
+}: WithdrawalRequest) {
+  await delay(Math.floor(Math.random() * 500) + 300); // Simulate API delay
+
+  try {
+    // Validate withdrawal amount
+    if (amount <= 0) {
+      throw new Error('Withdrawal amount must be greater than 0');
+    }
+
+    if (totalAmount > wallet.balance) {
+      throw new Error('Insufficient balance for withdrawal');
+    }
+
+    // Create new withdrawal transaction
+    const newTransaction: Transaction = {
+      type: 'withdrawal',
+      amount: amount,
+      status: 'pending',
+      date: new Date().toISOString(),
+      metadata: {
+        name: 'Jane Doe',
+        email: 'jane.doe@example.com',
+        type: 'withdrawal',
+      },
+      payment_reference: `REF${Date.now()}`,
+    };
+
+    // Update wallet balance
+    wallet.balance = wallet.balance - totalAmount;
+
+    // Add new transaction to transactions array
+    transactions.unshift(newTransaction as any); // Add to beginning of array
+
+    // Return the updated data
+    return {
+      transaction: newTransaction,
+      newBalance: wallet.balance,
+      success: true,
+    };
+  } catch (error) {
+    console.error('Error processing withdrawal:', error);
+    throw error;
+  }
+}
+
+// Optional: Add a function to get withdrawal history
+export async function getWithdrawalHistory() {
+  await delay(Math.floor(Math.random() * 500) + 300);
+  try {
+    return transactions.filter((t) => t.type === 'withdrawal');
+  } catch (error) {
+    console.error('Error fetching withdrawal history:', error);
+    return [];
   }
 }

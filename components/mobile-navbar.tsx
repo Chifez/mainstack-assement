@@ -12,17 +12,20 @@ import { LogOut, Menu } from 'lucide-react';
 import { homeItems, analyticsItems, crmItems, appsItems } from '@/lib/data';
 import { NavDropdown } from './nav-dropdown';
 import { UserMenu } from './user-menu';
+import { NotificationPopover } from './notification-popover';
 const Mobile = ({ user, menuItems, isMobile }: any) => {
   return (
     <div className="mr-auto flex items-center justify-end gap-6 w-full">
-      <button className="rounded-full p-2 hover:bg-gray-100 group">
-        <Image
-          src="/notifications.svg"
-          alt="Notifications"
-          width={20}
-          height={20}
-        />
-      </button>
+      <NotificationPopover>
+        <button className="rounded-full p-2 hover:bg-gray-100 group">
+          <Image
+            src="/notifications.svg"
+            alt="Notifications"
+            width={20}
+            height={20}
+          />
+        </button>
+      </NotificationPopover>
       <div className="flex items-center justify-start w-fit gap-3 bg-[#EFF1F6] rounded-full p-2">
         <Popover>
           <PopoverTrigger asChild>
@@ -82,12 +85,6 @@ const Mobile = ({ user, menuItems, isMobile }: any) => {
               />
 
               <div className="border-t border-gray-100 mt-2 pt-2 cursor-pointer">
-                {/* <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
-                  <span className="text-gray-500">
-                    <LogOut className="h-4 w-4" />
-                  </span>
-                  <span className="text-sm">Sign Out</span>
-                </button> */}
                 <div className="flex items-center justify-center w-fit gap-3 rounded-full p-1">
                   <UserMenu user={user} isMobile={true}>
                     <div>

@@ -138,7 +138,7 @@ export function FilterModal() {
 
         <div className="space-y-6">
           {/* Quick date filters */}
-          <div className="flex flex-wrap md:flex-nowrap gap-2">
+          <div className="flex flex-wrap md:flex-nowrap gap-2 lg:gap-1">
             <QuickFilterButton
               label="Today"
               onClick={() =>

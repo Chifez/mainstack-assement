@@ -1,8 +1,15 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { Transaction } from '@/lib/types';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { formatCurrency } from '@/lib/utils';
 
 interface DailyTotal {
   date: string;
@@ -15,142 +22,189 @@ interface BalanceChartProps {
 }
 
 export function BalanceChart({ transactions }: BalanceChartProps) {
-  const [dailyTotals, setDailyTotals] = useState<DailyTotal[]>([]);
   const [chartPoints, setChartPoints] = useState<string>('');
+  const [hoveredPoint, setHoveredPoint] = useState<DailyTotal | null>(null);
 
-  useEffect(() => {
-    if (!transactions || transactions.length === 0) {
-      setChartPoints('M0,100 L700,100');
-      return;
+  // Memoize the processed data to avoid unnecessary recalculations
+  const { dailyTotals, firstDate, lastDate } = useMemo(() => {
+    if (!transactions?.length) {
+      return {
+        dailyTotals: [],
+        firstDate: 'Apr 1, 2022',
+        lastDate: 'Apr 30, 2022',
+      };
     }
 
-    // Sort transactions by date
+    // Sort transactions once
     const sortedTransactions = [...transactions].sort(
       (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
     );
 
-    // Get the earliest and latest dates
-    const startDate = new Date(sortedTransactions[0].date);
-    const endDate = new Date(
-      sortedTransactions[sortedTransactions.length - 1].date
-    );
+    // Process transactions in a single pass
+    const balanceMap = new Map<string, number>();
+    let runningBalance = 0;
 
-    // Create a map of daily totals
-    const dailyMap = new Map<string, number>();
-
-    // Initialize all dates in the range with 0
-    const currentDate = new Date(startDate);
-    while (currentDate <= endDate) {
-      const dateStr = format(currentDate, 'yyyy-MM-dd');
-      dailyMap.set(dateStr, 0);
-      currentDate.setDate(currentDate.getDate() + 1);
-    }
-
-    // Add transaction amounts to daily totals
+    // Process each transaction and update running balance
     sortedTransactions.forEach((transaction) => {
-      const dateStr = transaction.date;
-      const currentTotal = dailyMap.get(dateStr) || 0;
-
-      // Add deposits, subtract withdrawals
-      const amountChange =
+      const dateStr = format(new Date(transaction.date), 'yyyy-MM-dd');
+      runningBalance +=
         transaction.type === 'withdrawal'
           ? -transaction.amount
           : transaction.amount;
 
-      dailyMap.set(dateStr, currentTotal + amountChange);
+      // Only store the last balance for each day
+      balanceMap.set(dateStr, runningBalance);
     });
 
-    // Convert map to array and calculate running total
-    let runningTotal = 0;
-    const totals: DailyTotal[] = [];
+    // Convert to array format needed for the chart
+    const totals: DailyTotal[] = Array.from(balanceMap.entries()).map(
+      ([date, total]) => ({
+        date,
+        formattedDate: format(parseISO(date), 'MMM d, yyyy'),
+        total,
+      })
+    );
 
-    dailyMap.forEach((amount, dateStr) => {
-      runningTotal += amount;
-      totals.push({
-        date: dateStr,
-        formattedDate: format(parseISO(dateStr), 'MMM d, yyyy'),
-        total: runningTotal,
-      });
-    });
-
-    setDailyTotals(totals);
-
-    // Generate SVG path for the chart
-    if (totals.length > 0) {
-      const maxTotal = Math.max(...totals.map((t) => t.total));
-      const minTotal = Math.min(...totals.map((t) => t.total));
-      const range = maxTotal - minTotal;
-
-      // Normalize values to fit in the chart height (180px)
-      const normalizeY = (value: number) => {
-        // Leave some padding at top and bottom
-        const chartHeight = 180;
-        const padding = 20;
-        const availableHeight = chartHeight - padding * 2;
-
-        // If there's only one value or all values are the same
-        if (range === 0) return padding + availableHeight / 2;
-
-        return (
-          chartHeight -
-          (((value - minTotal) / range) * availableHeight + padding)
-        );
-      };
-
-      // Generate path
-      const width = 700; // Chart width
-      const pointDistance = width / (totals.length - 1);
-
-      const points = totals.map((total, index) => {
-        const x = index * pointDistance;
-        const y = normalizeY(total.total);
-        return `${x},${y}`;
-      });
-
-      // Create a smooth curve through the points
-      let path = `M${points[0]}`;
-
-      for (let i = 0; i < points.length - 1; i++) {
-        const [x1, y1] = points[i].split(',').map(Number);
-        const [x2, y2] = points[i + 1].split(',').map(Number);
-
-        // Control points for the curve
-        const cpx1 = x1 + (x2 - x1) / 3;
-        const cpy1 = y1;
-        const cpx2 = x1 + (2 * (x2 - x1)) / 3;
-        const cpy2 = y2;
-
-        path += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${x2},${y2}`;
-      }
-
-      setChartPoints(path);
-    }
+    return {
+      dailyTotals: totals,
+      firstDate: totals[0]?.formattedDate || 'Apr 1, 2022',
+      lastDate: totals[totals.length - 1]?.formattedDate || 'Apr 30, 2022',
+    };
   }, [transactions]);
 
-  // Get the first and last date for display
-  const firstDate =
-    dailyTotals.length > 0 ? dailyTotals[0].formattedDate : 'Apr 1, 2022';
-  const lastDate =
-    dailyTotals.length > 0
-      ? dailyTotals[dailyTotals.length - 1].formattedDate
-      : 'Apr 30, 2022';
+  // Generate chart path and gradient fill
+  useEffect(() => {
+    if (!dailyTotals.length) {
+      setChartPoints('M0,100 L700,100');
+      return;
+    }
+
+    const width = 700;
+    const height = 180;
+    const padding = 20;
+    const availableHeight = height - padding * 2;
+
+    // Find min and max values in a single pass
+    const { min, max } = dailyTotals.reduce(
+      (acc, { total }) => ({
+        min: Math.min(acc.min, total),
+        max: Math.max(acc.max, total),
+      }),
+      { min: Infinity, max: -Infinity }
+    );
+
+    const range = max - min;
+    const pointDistance = width / (dailyTotals.length - 1);
+
+    // Generate points with optimized calculations
+    const points = dailyTotals.map(({ total }, index) => {
+      const x = index * pointDistance;
+      const y =
+        range === 0
+          ? padding + availableHeight / 2
+          : height - (((total - min) / range) * availableHeight + padding);
+      return { x, y, total, date: dailyTotals[index].formattedDate };
+    });
+
+    // Generate smooth path with fill
+    let path = `M${points[0].x},${points[0].y}`;
+    let fillPath = `M${points[0].x},${height} L${points[0].x},${points[0].y}`;
+
+    for (let i = 0; i < points.length - 1; i++) {
+      const { x: x1, y: y1 } = points[i];
+      const { x: x2, y: y2 } = points[i + 1];
+
+      // Calculate control points for smooth curve
+      const cpx1 = x1 + (x2 - x1) / 3;
+      const cpy1 = y1;
+      const cpx2 = x1 + (2 * (x2 - x1)) / 3;
+      const cpy2 = y2;
+
+      path += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${x2},${y2}`;
+      fillPath += ` C${cpx1},${cpy1} ${cpx2},${cpy2} ${x2},${y2}`;
+    }
+
+    // Complete the fill path
+    fillPath += ` L${points[points.length - 1].x},${height} Z`;
+
+    setChartPoints(JSON.stringify({ path, fillPath, points }));
+  }, [dailyTotals]);
+
+  const { path, fillPath, points } = JSON.parse(
+    chartPoints ||
+      '{"path":"M0,100 L700,100","fillPath":"M0,100 L700,100 L700,180 L0,180 Z","points":[]}'
+  );
 
   return (
     <div className="h-[200px] relative mt-6">
-      <svg
-        width="100%"
-        height="100%"
-        viewBox="0 0 700 200"
-        preserveAspectRatio="none"
-      >
-        <path
-          d={chartPoints || 'M0,100 L700,100'}
-          fill="none"
-          stroke="#FF5403"
-          strokeWidth="1"
-          strokeLinecap="round"
-        />
-      </svg>
+      <TooltipProvider>
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 700 200"
+          preserveAspectRatio="none"
+          className="cursor-pointer"
+        >
+          {/* Gradient definition */}
+          <defs>
+            <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#FF5403" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#FF5403" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* Fill area */}
+          <path d={fillPath} fill="url(#chartGradient)" stroke="none" />
+
+          {/* Chart line */}
+          <path
+            d={path}
+            fill="none"
+            stroke="#FF5403"
+            strokeWidth="1"
+            strokeLinecap="round"
+          />
+
+          {/* Interactive points */}
+          {points.map((point: any, index: any) => (
+            <TooltipProvider key={index}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r="4"
+                    fill="#FF5403"
+                    className="opacity-0 hover:opacity-100 transition-opacity"
+                    onMouseEnter={() => setHoveredPoint(dailyTotals[index])}
+                    onMouseLeave={() => setHoveredPoint(null)}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <div className="space-y-1">
+                    <p>here</p>
+                    <p className="font-medium">{point.date}</p>
+                    <p className="text-sm text-gray-500">
+                      Balance: {formatCurrency(point.total)}
+                    </p>
+                    {dailyTotals[index] && (
+                      <p className="text-sm text-gray-500">
+                        {transactions.find(
+                          (t) =>
+                            format(new Date(t.date), 'MMM d, yyyy') ===
+                            point.date
+                        )?.type === 'withdrawal'
+                          ? 'Withdrawal'
+                          : 'Deposit'}
+                      </p>
+                    )}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ))}
+        </svg>
+      </TooltipProvider>
       <div className="relative">
         <div className="h-[0.8px] absolute bottom-5 bg-gray-300 w-full before:absolute after:absolute before:size-1.5 after:size-1.5 before:rounded-full after:rounded-full before:-top-[3px] after:-top-[3px] before:left-0 after:right-0 before:bg-gray-300 after:bg-gray-300" />
       </div>

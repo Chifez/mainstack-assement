@@ -12,6 +12,8 @@ import { LogOut } from 'lucide-react';
 import { homeItems, analyticsItems, crmItems, appsItems } from '@/lib/data';
 import { NavDropdown } from './nav-dropdown';
 import { UserMenu } from './user-menu';
+import { NotificationPopover } from './notification-popover';
+import { ChatPopover } from './chat-popover';
 
 const Desktop = ({ user, menuItems, isLoading }: any) => {
   return (
@@ -65,17 +67,21 @@ const Desktop = ({ user, menuItems, isLoading }: any) => {
         />
       </nav>
       <div className="mr-auto flex items-center justify-end gap-6 w-full">
-        <button className="rounded-full p-2 hover:bg-gray-100 group">
-          <Image
-            src="/notifications.svg"
-            alt="Notifications"
-            width={16}
-            height={16}
-          />
-        </button>
-        <button className="rounded-full p-2 hover:bg-gray-100 group">
-          <Image src="/chat.svg" alt="Chat" width={20} height={20} />
-        </button>
+        <NotificationPopover>
+          <button className="rounded-full px-2.5 py-2 hover:bg-gray-100 group">
+            <Image
+              src="/notifications.svg"
+              alt="Notifications"
+              width={16}
+              height={16}
+            />
+          </button>
+        </NotificationPopover>
+        <ChatPopover>
+          <button className="rounded-full p-2 hover:bg-gray-100 group">
+            <Image src="/chat.svg" alt="Chat" width={20} height={20} />
+          </button>
+        </ChatPopover>
 
         {/* User Menu Popover */}
         {isLoading ? (

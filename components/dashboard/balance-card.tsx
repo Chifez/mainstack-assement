@@ -7,8 +7,11 @@ import { formatCurrency } from '@/lib/utils';
 import { Transaction, Wallet } from '@/lib/types';
 import { fetchTransactions, fetchWallet } from '@/lib/api';
 import { BalanceChart } from './balance-chart';
+import { useState } from 'react';
+import { WithdrawModal } from './withdraw-modal';
 
 export function BalanceCard() {
+  const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const { data: wallet, isLoading } = useQuery<Wallet>({
     queryKey: ['wallet'],
     queryFn: fetchWallet,
@@ -35,7 +38,10 @@ export function BalanceCard() {
             </p>
           )}
         </div>
-        <Button className="bg-black text-white hover:bg-black/90 rounded-full px-8">
+        <Button
+          className="bg-black text-white hover:bg-black/90 rounded-full px-8"
+          onClick={() => setIsWithdrawModalOpen(true)}
+        >
           Withdraw
         </Button>
       </div>
@@ -47,6 +53,12 @@ export function BalanceCard() {
           <BalanceChart transactions={transactions || []} />
         )}
       </div>
+
+      <WithdrawModal
+        isOpen={isWithdrawModalOpen}
+        onClose={() => setIsWithdrawModalOpen(false)}
+        availableBalance={wallet?.balance || 0}
+      />
     </div>
   );
 }
