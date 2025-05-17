@@ -102,11 +102,53 @@ export function TransactionList({ filters }: { filters?: any[] }) {
     setTransactionStatus(['all']);
   };
 
+  const handleExportList = () => {
+    if (!filteredTransactions) return;
+
+    // Create CSV content
+    const headers = ['Date', 'Description', 'Name', 'Amount', 'Status'];
+    const csvContent = [
+      headers.join(','),
+      ...filteredTransactions.map((transaction) =>
+        [
+          formatDate(transaction.date),
+          `"${(transaction.type === 'withdrawal'
+            ? 'Cash Withdrawal'
+            : transaction.metadata?.product_name || 'Unnamed Transaction'
+          ).replace(/"/g, '""')}"`,
+          `"${(transaction.type === 'withdrawal'
+            ? transaction.status
+            : transaction.metadata?.name || 'No name provided'
+          ).replace(/"/g, '""')}"`,
+          `USD ${transaction.amount}`,
+          transaction.status,
+        ].join(',')
+      ),
+    ].join('\n');
+
+    // Add footer note
+    const footerNote = '\n\nThank you for checking this out!';
+    const finalContent = csvContent + footerNote;
+
+    // Create and download the file
+    const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+
+    link.setAttribute('href', url);
+    link.setAttribute('download', 'transactions-report.csv');
+    link.style.visibility = 'hidden';
+
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-300 pb-4">
+      <div className="flex flex-row items-center justify-between gap-4 border-b border-gray-300 pb-4">
         <div>
-          <h2 className="text-2xl font-bold">
+          <h2 className="text-xl md:text-2xl font-bold">
             {filteredTransactions?.length || 0} Transactions
           </h2>
           <p className="text-sm text-muted-foreground">{getFilterText()}</p>
@@ -128,6 +170,7 @@ export function TransactionList({ filters }: { filters?: any[] }) {
           <Button
             variant="outline"
             className="h-10 gap-2 rounded-full px-6 bg-[#EFF1F6]"
+            onClick={handleExportList}
           >
             <span className="font-semibold">Export list</span>
             <Download className="size-3" strokeWidth={1} />

@@ -23,7 +23,7 @@ export function BalanceCard() {
 
   return (
     <div className="grid gap-6">
-      <div className="flex flex-col md:flex-row md:items-center gap-12">
+      <div className="flex flex-row items-center gap-12">
         <div>
           <div className="text-sm text-gray-500 mb-2">Available Balance</div>
           {isLoading ? (

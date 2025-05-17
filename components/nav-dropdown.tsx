@@ -18,31 +18,42 @@ export function NavDropdown({
   activeIcon,
   isActive,
   items,
+  isMobile,
 }: NavDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <Popover open={isOpen} onOpenChange={() => setIsOpen(!isOpen)}>
       <PopoverTrigger asChild>
-        <Link
-          href="#"
-          className={cn(
-            'flex items-center justify-center gap-1.5 text-base font-semibold transition-colors rounded-full px-6 py-2',
-            'text-gray-500 ',
-            isOpen
-              ? 'bg-black text-white hover:text-white hover:bg-black'
-              : 'hover:text-black hover:bg-[#EFF1F6]'
-          )}
-          onClick={() => setIsOpen(isOpen)}
-        >
-          <Image
-            src={isOpen ? activeIcon : icon}
-            alt={`${label} Icon`}
-            width={16}
-            height={16}
-          />
-          {label}
-          {/* {isOpen && (
+        {isMobile ? (
+          <Link
+            href="#"
+            className="flex items-center justify-start gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
+          >
+            <Image src={icon} alt={`${label} Icon`} width={12} height={12} />
+
+            <span className="text-sm">{label}</span>
+          </Link>
+        ) : (
+          <Link
+            href="#"
+            className={cn(
+              'flex items-center justify-center gap-1.5 text-base font-semibold transition-colors rounded-full px-6 py-2',
+              'text-gray-500 ',
+              isOpen
+                ? 'bg-black text-white hover:text-white hover:bg-black'
+                : 'hover:text-black hover:bg-[#EFF1F6]'
+            )}
+            onClick={() => setIsOpen(isOpen)}
+          >
+            <Image
+              src={isOpen ? activeIcon : icon}
+              alt={`${label} Icon`}
+              width={16}
+              height={16}
+            />
+            {label}
+            {/* {isOpen && (
             <span className="flex items-center gap-2 font-light text-sm">
               |
               <span className="flex items-center mr-2">
@@ -56,7 +67,8 @@ export function NavDropdown({
               </span>
             </span>
           )} */}
-        </Link>
+          </Link>
+        )}
       </PopoverTrigger>
 
       <PopoverContent

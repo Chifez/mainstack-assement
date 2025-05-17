@@ -41,4 +41,5 @@ export interface NavDropdownProps {
   activeIcon: string;
   isActive: boolean;
   items: NavItem[];
+  isMobile?: boolean;
 }

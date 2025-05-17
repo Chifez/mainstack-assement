@@ -126,7 +126,7 @@ export function FilterModal() {
 
   return (
     <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-      <SheetContent className="sm:max-w-sm h-[97.5%] rounded-2xl m-2 p-4">
+      <SheetContent className="max-w-[80vw] sm:max-w-sm h-[97.5%] rounded-2xl m-2 p-4">
         <SheetHeader>
           <div className="flex items-center justify-between">
             <SheetTitle className="text-xl font-bold">Filter</SheetTitle>
@@ -138,7 +138,7 @@ export function FilterModal() {
 
         <div className="space-y-6">
           {/* Quick date filters */}
-          <div className="flex gap-1">
+          <div className="flex flex-wrap md:flex-nowrap gap-2">
             <QuickFilterButton
               label="Today"
               onClick={() =>
