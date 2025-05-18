@@ -43,3 +43,28 @@ export interface NavDropdownProps {
   items: NavItem[];
   isMobile?: boolean;
 }
+
+export interface DailyTotal {
+  date: string;
+  formattedDate: string;
+  total: number;
+}
+
+export interface ChartPoint {
+  x: number;
+  y: number;
+  total: number;
+  date: string;
+}
+
+export interface ChartData {
+  path: string;
+  fillPath: string;
+  points: ChartPoint[];
+  firstDate: string;
+  lastDate: string;
+}
+
+export interface BalanceChartProps {
+  transactions: Transaction[];
+}
