@@ -23,7 +23,6 @@ interface BalanceChartProps {
 
 export function BalanceChart({ transactions }: BalanceChartProps) {
   const [chartPoints, setChartPoints] = useState<string>('');
-  const [hoveredPoint, setHoveredPoint] = useState<DailyTotal | null>(null);
 
   // Memoize the processed data to avoid unnecessary recalculations
   const { dailyTotals, firstDate, lastDate } = useMemo(() => {
@@ -167,27 +166,35 @@ export function BalanceChart({ transactions }: BalanceChartProps) {
 
           {/* Interactive points */}
           {points.map((point: any, index: any) => (
-            <TooltipProvider key={index}>
-              <Tooltip>
-                <TooltipTrigger asChild>
+            <Tooltip key={index}>
+              <TooltipTrigger asChild>
+                <g>
+                  {/* Invisible larger hit area */}
+                  <circle
+                    cx={point.x}
+                    cy={point.y}
+                    r="10"
+                    fill="transparent"
+                    className="cursor-pointer"
+                  />
+                  {/* Visible dot */}
                   <circle
                     cx={point.x}
                     cy={point.y}
                     r="4"
                     fill="#FF5403"
-                    className="opacity-0 hover:opacity-100 transition-opacity"
-                    onMouseEnter={() => setHoveredPoint(dailyTotals[index])}
-                    onMouseLeave={() => setHoveredPoint(null)}
+                    className="opacity-0 hover:opacity-100"
                   />
-                </TooltipTrigger>
-                <TooltipContent>
-                  <div className="space-y-1">
-                    <p>here</p>
-                    <p className="font-medium">{point.date}</p>
-                    <p className="text-sm text-gray-500">
-                      Balance: {formatCurrency(point.total)}
-                    </p>
-                    {dailyTotals[index] && (
+                </g>
+              </TooltipTrigger>
+              <TooltipContent
+                side="top"
+                className="z-50 bg-white shadow-md rounded-md p-2"
+              >
+                <div className="space-y-1">
+                  <p className="font-medium text-gray-500">{point.date}</p>
+                  {dailyTotals[index] && (
+                    <div className="inline-flex gap-1">
                       <p className="text-sm text-gray-500">
                         {transactions.find(
                           (t) =>
@@ -196,12 +203,25 @@ export function BalanceChart({ transactions }: BalanceChartProps) {
                         )?.type === 'withdrawal'
                           ? 'Withdrawal'
                           : 'Deposit'}
+                        :
                       </p>
-                    )}
-                  </div>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
+                      <p className="text-sm text-gray-500">
+                        {formatCurrency(
+                          transactions.find(
+                            (t) =>
+                              format(new Date(t.date), 'MMM d, yyyy') ===
+                              point.date
+                          )?.amount || 0
+                        )}
+                      </p>
+                    </div>
+                  )}
+                  <p className="text-sm text-gray-500">
+                    Balance: {formatCurrency(point.total)}
+                  </p>
+                </div>
+              </TooltipContent>
+            </Tooltip>
           ))}
         </svg>
       </TooltipProvider>

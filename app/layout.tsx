@@ -21,16 +21,30 @@ const degular = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'Mainstack - Financial Dashboard',
+  title: 'Mainstack - Admin Dashboard',
   description: 'Mainstack Frontend Assessment',
   openGraph: {
-    title: 'Mainstack - Financial Dashboard',
-    description: 'Mainstack Frontend Assessment',
+    title: 'Mainstack - Admin Dashboard',
+    description: 'Mainstack Admin Financial Dashboard Frontend Assessment',
     type: 'website',
     locale: 'en-US',
-    // url: '',
+    url: 'https://mainstack-assesment.vercel.app',
+    images: [
+      {
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 620,
+        alt: 'Mainstack - Admin Dashboard',
+      },
+    ],
   },
-  // metadataBase: new URL(''),
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Mainstack - Admin Dashboard',
+    description: 'Mainstack Admin Financial Dashboard Frontend Assessment',
+    images: ['/twitter-image.png'],
+  },
+  metadataBase: new URL('https://mainstack-assesment.vercel.app'),
 };
 
 export default function RootLayout({
@@ -43,9 +57,7 @@ export default function RootLayout({
       <body
         className={`${degular.variable} ${inter.variable} ${dmSans.variable} font-degular antialiased`}
       >
-        <TooltipProvider>
-          <QueryProvider>{children}</QueryProvider>
-        </TooltipProvider>
+        <QueryProvider>{children}</QueryProvider>
         <Toaster richColors />
       </body>
     </html>
