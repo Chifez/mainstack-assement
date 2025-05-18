@@ -5,7 +5,6 @@ import localFont from 'next/font/local';
 import './globals.css';
 import { QueryProvider } from '@/lib/query-provider';
 import { Toaster } from '@/components/ui/sonner';
-import { TooltipProvider } from '@/components/ui/tooltip';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const dmSans = DM_Sans({
