@@ -111,8 +111,10 @@ export async function handleWithdrawal({
       payment_reference: `REF${Date.now()}`,
     };
 
-    // Update wallet balance
+    // Update wallet balance and pending payout
     wallet.balance = wallet.balance - totalAmount;
+    wallet.pending_payout = wallet.pending_payout + totalAmount;
+    wallet.ledger_balance = wallet.ledger_balance - totalAmount;
 
     // Add new transaction to transactions array
     transactions.unshift(newTransaction as any); // Add to beginning of array
@@ -121,6 +123,8 @@ export async function handleWithdrawal({
     return {
       transaction: newTransaction,
       newBalance: wallet.balance,
+      newPendingPayout: wallet.pending_payout,
+      newLedgerBalance: wallet.ledger_balance,
       success: true,
     };
   } catch (error) {

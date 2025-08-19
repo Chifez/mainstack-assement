@@ -92,9 +92,9 @@ export const user = {
 
 export const wallet = {
   balance: 3550,
-  total_payout: 1450,
+  total_payout: 1180,
   total_revenue: 5000,
-  pending_payout: 0,
+  pending_payout: 270,
   ledger_balance: 3550,
 };
 

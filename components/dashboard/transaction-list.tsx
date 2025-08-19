@@ -1,147 +1,48 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import Image from 'next/image';
 import { ChevronDown, Download } from 'lucide-react';
-import { format, differenceInDays, isThisMonth } from 'date-fns';
+import { useState } from 'react';
 
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
-
-import { formatDate } from '@/lib/utils';
 import { fetchTransactions } from '@/lib/api';
 import type { Transaction } from '@/lib/types';
-import { useFilterStore } from '@/store/filter-store';
-import { Badge } from '@/components/ui/badge';
+
+import { TransactionItem } from './transaction-item';
+import { EmptyTransactions } from './empty-transaction';
+import { TransactionDetailModal } from './transaction-detail-modal';
+import useTransaction from '../hooks/useTransaction';
+import { useIsMobile } from '../hooks/useIsMobile';
 
 export function TransactionList({ filters }: { filters?: any[] }) {
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const isMobile = useIsMobile();
+
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
     queryKey: ['transactions'],
     queryFn: fetchTransactions,
   });
 
   const {
+    filteredTransactions,
+    getFilterText,
+    activeFiltersCount,
+    handleExportList,
+    handleClearFilters,
     setIsFilterOpen,
-    dateRange,
-    transactionType,
-    transactionStatus,
-    setDateRange,
-    setTransactionType,
-    setTransactionStatus,
-  } = useFilterStore();
+  } = useTransaction({ transactions: transactions || [] });
 
-  const activeFiltersCount = [
-    dateRange.from || dateRange.to ? 1 : 0,
-    transactionType.length > 0 && !transactionType.includes('all') ? 1 : 0,
-    transactionStatus.length > 0 && !transactionStatus.includes('all') ? 1 : 0,
-  ].reduce((acc, curr) => acc + curr, 0);
-
-  const getFilterText = () => {
-    if (!dateRange.from && !dateRange.to) {
-      return 'Your transactions for All time';
-    }
-
-    if (dateRange.from && dateRange.to) {
-      const days = differenceInDays(dateRange.to, dateRange.from);
-
-      if (days === 7) {
-        return 'Your transactions for the last 7 days';
-      }
-
-      if (days === 30) {
-        return 'Your transactions for the last 30 days';
-      }
-
-      if (isThisMonth(dateRange.from) && isThisMonth(dateRange.to)) {
-        return 'Your transactions for This month';
-      }
-      return `Your transactions from ${formatDate(
-        dateRange.from.toString()
-      )} to ${formatDate(dateRange.to.toString())}`;
-    }
-    if (dateRange.from) {
-      return `Your transactions from ${formatDate(dateRange.from.toString())}`;
-    }
-
-    if (dateRange.to) {
-      return `Your transactions until ${formatDate(dateRange.to.toString())}`;
-    }
-
-    return 'Your transactions for All time';
+  const handleTransactionClick = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+    setIsModalOpen(true);
   };
 
-  const filteredTransactions = transactions?.filter((transaction) => {
-    // Date range filter
-    if (dateRange.from && dateRange.to) {
-      const transactionDate = new Date(transaction.date);
-      if (transactionDate < dateRange.from || transactionDate > dateRange.to) {
-        return false;
-      }
-    }
-
-    // Transaction type filter
-    if (transactionType.length > 0 && !transactionType.includes('all')) {
-      if (!transactionType.includes(transaction?.type as any)) {
-        return false;
-      }
-    }
-
-    // Transaction status filter
-    if (transactionStatus.length > 0 && !transactionStatus.includes('all')) {
-      if (!transactionStatus.includes(transaction.status)) {
-        return false;
-      }
-    }
-
-    return true;
-  });
-
-  const handleClearFilters = () => {
-    setDateRange({ from: undefined, to: undefined });
-    setTransactionType(['all']);
-    setTransactionStatus(['all']);
-  };
-
-  const handleExportList = () => {
-    if (!filteredTransactions) return;
-
-    // Create CSV content
-    const headers = ['Date', 'Description', 'Name', 'Amount', 'Status'];
-    const csvContent = [
-      headers.join(','),
-      ...filteredTransactions.map((transaction) =>
-        [
-          formatDate(transaction.date),
-          `"${(transaction.type === 'withdrawal'
-            ? 'Cash Withdrawal'
-            : transaction.metadata?.product_name || 'Unnamed Transaction'
-          ).replace(/"/g, '""')}"`,
-          `"${(transaction.type === 'withdrawal'
-            ? transaction.status
-            : transaction.metadata?.name || 'No name provided'
-          ).replace(/"/g, '""')}"`,
-          `USD ${transaction.amount}`,
-          transaction.status,
-        ].join(',')
-      ),
-    ].join('\n');
-
-    // Add footer note
-    const footerNote = '\n\nThank you for checking this out!';
-    const finalContent = csvContent + footerNote;
-
-    // Create and download the file
-    const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'transactions-report.csv');
-    link.style.visibility = 'hidden';
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedTransaction(null);
   };
 
   return (
@@ -189,114 +90,23 @@ export function TransactionList({ filters }: { filters?: any[] }) {
       ) : filteredTransactions && filteredTransactions.length > 0 ? (
         <div className="space-y-6">
           {filteredTransactions.map((transaction, index) => (
-            <TransactionItem key={index} transaction={transaction} />
+            <TransactionItem
+              key={index}
+              transaction={transaction}
+              onClick={handleTransactionClick}
+            />
           ))}
         </div>
       ) : (
         <EmptyTransactions onClearFilter={handleClearFilters} />
       )}
-    </div>
-  );
-}
 
-function TransactionItem({ transaction }: { transaction: Transaction }) {
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'successful':
-        return 'text-emerald-600';
-      case 'pending':
-        return 'text-amber-600';
-      default:
-        return 'text-muted-foreground';
-    }
-  };
-
-  const getTransactionIcon = (type: string) => {
-    if (type?.includes('withdrawal')) {
-      return (
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-          <Image
-            src="/call_made.svg"
-            height={12}
-            width={12}
-            alt="withdrawal"
-            priority
-          />
-        </div>
-      );
-    }
-    return (
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
-        <Image
-          src="/call_received.svg"
-          height={12}
-          width={12}
-          alt="deposit"
-          priority
-        />
-      </div>
-    );
-  };
-
-  return (
-    <div className="flex items-center justify-between py-3">
-      <div className="flex items-center gap-3">
-        {getTransactionIcon(transaction.type)}
-        <div>
-          <div className="font-medium">
-            {transaction.type === 'withdrawal'
-              ? 'Cash Withdrawal'
-              : transaction.metadata?.product_name || 'Unnamed Transaction'}
-          </div>
-          <div
-            className={`text-sm ${
-              transaction.type === 'withdrawal' &&
-              getStatusColor(transaction.status)
-            }`}
-          >
-            {transaction.type === 'withdrawal'
-              ? transaction.status
-              : transaction.metadata?.name || 'No name provided'}
-          </div>
-        </div>
-      </div>
-      <div className="text-right">
-        <div className="text-base font-bold">USD {transaction.amount}</div>
-        <div className="text-sm text-muted-foreground">
-          {formatDate(transaction.date)}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function EmptyTransactions({ onClearFilter }: { onClearFilter: () => void }) {
-  return (
-    <div className="flex flex-col items-center justify-center py-12 text-center">
-      <div className="flex flex-col items-start">
-        <div className="mb-4 rounded-xl bg-muted w-fit p-4">
-          <Image
-            src="/receipt_long.svg"
-            height={16}
-            width={16}
-            alt="receipt"
-            priority
-          />
-        </div>
-        <h3 className="text-lg font-bold text-start">
-          No matching transaction found <br /> for the selected filter
-        </h3>
-        <p className="text-sm text-muted-foreground">
-          Change your filters to see more results, or add a new transaction
-        </p>
-        <Button
-          variant="outline"
-          className="mt-4 w-fit rounded-full font-semibold bg-[#eff1f5]"
-          onClick={onClearFilter}
-        >
-          Clear Filter
-        </Button>
-      </div>
+      <TransactionDetailModal
+        transaction={selectedTransaction}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        isMobile={isMobile}
+      />
     </div>
   );
 }
