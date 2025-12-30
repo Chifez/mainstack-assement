@@ -1,3 +1,5 @@
+'use client';
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -13,7 +15,20 @@ import { homeItems, analyticsItems, crmItems, appsItems } from '@/lib/data';
 import { NavDropdown } from './nav-dropdown';
 import { UserMenu } from './user-menu';
 import { NotificationPopover } from './notification-popover';
+import { usePathname } from 'next/navigation';
+
 const Mobile = ({ user, menuItems, isMobile }: any) => {
+  const pathname = usePathname();
+
+  // Determine active states based on current pathname
+  const isHomeActive =
+    pathname === '/dashboard' ||
+    pathname.startsWith('/dashboard/activity') ||
+    pathname.startsWith('/dashboard/links');
+  const isAnalyticsActive = pathname.startsWith('/dashboard/analytics/');
+  const isRevenueActive = pathname === '/dashboard/revenue';
+  const isCrmActive = pathname.startsWith('/dashboard/crm/');
+  const isAppsActive = pathname.startsWith('/dashboard/apps/');
   return (
     <div className="mr-auto flex items-center justify-end gap-6 w-full">
       <NotificationPopover>
@@ -37,7 +52,7 @@ const Mobile = ({ user, menuItems, isMobile }: any) => {
                 label="Home"
                 icon="/home.svg"
                 activeIcon="/home-white.svg"
-                isActive={false}
+                isActive={isHomeActive}
                 items={homeItems}
                 isMobile={isMobile}
               />
@@ -46,7 +61,7 @@ const Mobile = ({ user, menuItems, isMobile }: any) => {
                 label="Analytics"
                 icon="/analytics.svg"
                 activeIcon="/analytics-white.svg"
-                isActive={false}
+                isActive={isAnalyticsActive}
                 items={analyticsItems}
                 isMobile={isMobile}
               />
@@ -54,7 +69,10 @@ const Mobile = ({ user, menuItems, isMobile }: any) => {
               <Link
                 href="/dashboard/revenue"
                 className={cn(
-                  'flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors'
+                  'flex items-center gap-3 px-4 py-2.5 transition-colors',
+                  isRevenueActive
+                    ? 'bg-gray-100 font-semibold'
+                    : 'hover:bg-gray-50'
                 )}
               >
                 <Image
@@ -70,7 +88,7 @@ const Mobile = ({ user, menuItems, isMobile }: any) => {
                 label="CRM"
                 icon="/crm.svg"
                 activeIcon="/crm-white.svg"
-                isActive={false}
+                isActive={isCrmActive}
                 items={crmItems}
                 isMobile={isMobile}
               />
@@ -79,7 +97,7 @@ const Mobile = ({ user, menuItems, isMobile }: any) => {
                 label="Apps"
                 icon="/widgets.svg"
                 activeIcon="/widgets-white.svg"
-                isActive={false}
+                isActive={isAppsActive}
                 items={appsItems}
                 isMobile={isMobile}
               />

@@ -20,7 +20,7 @@ export function ChartTooltip({
   children,
 }: ChartTooltipProps) {
   const transaction = transactions.find(
-    (t) => format(new Date(t.date), 'MMM d, yyyy') === point.date
+    (t) => format(new Date(t.date || t.created_at), 'MMM d, yyyy') === point.date
   );
 
   return (

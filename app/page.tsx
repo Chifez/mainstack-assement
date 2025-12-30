@@ -3,132 +3,83 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { LandingNavbar } from '@/components/landing/landing-navbar';
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen flex flex-col lg:flex-row">
-      {/* Left Side - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-black relative overflow-hidden">
-        {/* Floating Shapes with Animations */}
-        <div className="absolute inset-0 overflow-hidden">
-          {/* Large Circle - Animated */}
-          <div
-            className="absolute top-20 -left-20 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse"
-            style={{ animationDuration: '4s' }}
-          />
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-white">
+      <LandingNavbar />
 
-          {/* Medium Circle - Animated */}
-          <div
-            className="absolute bottom-32 right-10 w-64 h-64 bg-white/5 rounded-full blur-2xl animate-pulse"
-            style={{ animationDuration: '5s', animationDelay: '1s' }}
-          />
-
-          {/* Small Circles */}
-          <div
-            className="absolute top-1/3 right-1/4 w-32 h-32 bg-white/5 rounded-full blur-xl animate-pulse"
-            style={{ animationDuration: '3s' }}
-          />
-          <div
-            className="absolute bottom-1/4 left-1/3 w-24 h-24 bg-white/5 rounded-full blur-lg animate-pulse"
-            style={{ animationDuration: '6s', animationDelay: '2s' }}
-          />
-
-          {/* Geometric Shapes - Rotating */}
-          <div
-            className="absolute top-1/2 left-1/4 w-40 h-40 border border-white/10 rotate-45 rounded-lg animate-pulse"
-            style={{ animationDuration: '8s' }}
-          />
-          <div
-            className="absolute bottom-1/3 right-1/3 w-28 h-28 border border-white/10 rotate-12 rounded-full animate-pulse"
-            style={{ animationDuration: '7s', animationDelay: '1.5s' }}
-          />
-
-          {/* Additional floating elements */}
-          <div
-            className="absolute top-1/4 left-1/2 w-20 h-20 bg-white/3 rounded-full blur-md animate-pulse"
-            style={{ animationDuration: '4s', animationDelay: '0.5s' }}
-          />
-          <div
-            className="absolute bottom-1/2 right-1/4 w-16 h-16 bg-white/3 rounded-full blur-md animate-pulse"
-            style={{ animationDuration: '5s', animationDelay: '2s' }}
-          />
-
-          {/* Gradient Orbs */}
-          <div className="absolute top-0 right-0 w-72 h-72 bg-gradient-to-br from-white/10 to-transparent rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-white/10 to-transparent rounded-full blur-3xl" />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 w-full flex flex-col justify-between h-full p-12">
-          {/* Top Navigation */}
-          <div className="flex justify-between items-center">
-            <Link href="/">
-              <Image
-                src="/mainstack-logo.svg"
-                alt="Mainstack Logo"
-                width={36}
-                height={36}
-                className="brightness-0 invert drop-shadow-lg"
-                priority
-              />
-            </Link>
-            <Link
-              href="/about"
-              className="text-white/70 hover:text-white transition-colors text-sm font-medium font-degular"
-            >
-              Learn More
-            </Link>
-          </div>
-
-          {/* Center - Logo and Branding */}
-          <div className="flex-1 flex flex-col justify-center items-center text-center">
-            <div className="flex items-end gap-1 mb-4 transform transition-transform hover:scale-105">
-              <h1 className="text-4xl font-bold text-white mb-2 font-degular tracking-tight">
-                Mainstack
+      {/* Hero Section */}
+      <section className="flex-1 flex items-center justify-center px-4 py-20">
+        <div className="container mx-auto max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <div className="text-center lg:text-left">
+              <h1 className="text-5xl lg:text-6xl font-bold mb-6 font-degular leading-tight">
+                Financial Ledger System
+                <br />
+                <span className="text-gray-600">Built for Scale</span>
               </h1>
+              <p className="text-xl text-gray-600 mb-8 font-degular leading-relaxed">
+                Track, manage, and audit transactions with enterprise-grade
+                reliability. Built for correctness, auditability, and
+                resilience.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <Button
+                  asChild
+                  className="bg-black text-white hover:bg-black/90 rounded-full px-8 py-6 text-base font-degular"
+                >
+                  <Link href="/register">Get Started</Link>
+                </Button>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="rounded-full px-8 py-6 text-base font-degular"
+                  onClick={() => {
+                    const element = document.getElementById('features');
+                    if (element) {
+                      element.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
+                >
+                  <button>Learn More</button>
+                </Button>
+              </div>
             </div>
-            <p className="text-lg text-gray-300 max-w-md font-degular leading-relaxed">
-              A fintech ledger system for tracking money internally
-            </p>
-          </div>
-
-          {/* Bottom - Copyright */}
-          <div className="text-center">
-            <p className="text-white/50 text-xs font-degular">
-              All rights reserved Mainstack 2025
-            </p>
+            <div className="hidden lg:block">
+              <div className="bg-gray-100 rounded-lg p-8 shadow-lg">
+                <div className="aspect-video bg-white rounded border-2 border-gray-200 flex items-center justify-center">
+                  <p className="text-gray-400 font-degular">
+                    Dashboard Preview
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Mobile Logo Bar */}
-      <div className="lg:hidden bg-black py-6 px-4 flex items-center justify-center">
-        <Image
-          src="/mainstack-logo.svg"
-          alt="Mainstack Logo"
-          width={150}
-          height={45}
-          className="brightness-0 invert"
-          priority
-        />
-      </div>
-
-      {/* Right Side - Content */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center bg-gray-50 px-4 py-12">
-        <div className="w-full max-w-2xl space-y-8">
-          <div className="text-center lg:text-left">
-            <h2 className="text-4xl font-bold mb-4 font-degular">
-              Financial Ledger System
+      {/* Features Section */}
+      <section id="features" className="py-20 lg:py-32 bg-white">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-4 font-degular">
+              Everything you need to manage finances
             </h2>
-            <p className="text-lg text-gray-600 mb-8 font-degular">
-              A comprehensive fintech ledger system designed to model how real
-              financial platforms track money internally. Built for correctness,
-              auditability, and resilience.
+            <p className="text-xl text-gray-600 font-degular">
+              Powerful features designed for financial operations
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Feature 1: Immutable Transaction Ledger */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
+                <p className="text-gray-400 text-sm font-degular">
+                  Transaction List Screenshot
+                </p>
+              </div>
               <h3 className="text-xl font-semibold mb-2 font-degular">
                 Immutable Transaction Ledger
               </h3>
@@ -138,7 +89,13 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+            {/* Feature 2: Multi-Currency Support */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
+                <p className="text-gray-400 text-sm font-degular">
+                  Currency Selector Screenshot
+                </p>
+              </div>
               <h3 className="text-xl font-semibold mb-2 font-degular">
                 Multi-Currency Support
               </h3>
@@ -148,7 +105,13 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+            {/* Feature 3: Real-Time Balance Calculations */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
+                <p className="text-gray-400 text-sm font-degular">
+                  Balance Chart Screenshot
+                </p>
+              </div>
               <h3 className="text-xl font-semibold mb-2 font-degular">
                 Real-Time Balance Calculations
               </h3>
@@ -158,7 +121,13 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+            {/* Feature 4: Audit Logging */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
+                <p className="text-gray-400 text-sm font-degular">
+                  Audit Log Screenshot
+                </p>
+              </div>
               <h3 className="text-xl font-semibold mb-2 font-degular">
                 Audit Logging
               </h3>
@@ -168,7 +137,13 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+            {/* Feature 5: Transaction Lifecycle Management */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
+                <p className="text-gray-400 text-sm font-degular">
+                  Transaction Flow Screenshot
+                </p>
+              </div>
               <h3 className="text-xl font-semibold mb-2 font-degular">
                 Transaction Lifecycle Management
               </h3>
@@ -178,7 +153,13 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="p-6 bg-white rounded-lg shadow-sm border border-gray-200">
+            {/* Feature 6: Idempotent Operations */}
+            <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+              <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
+                <p className="text-gray-400 text-sm font-degular">
+                  Transaction Creation Screenshot
+                </p>
+              </div>
               <h3 className="text-xl font-semibold mb-2 font-degular">
                 Idempotent Operations
               </h3>
@@ -188,24 +169,189 @@ export default function LandingPage() {
               </p>
             </div>
           </div>
+        </div>
+      </section>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
-            <Button
-              asChild
-              className="bg-black text-white hover:bg-black/90 rounded-full px-8 py-6 text-base font-degular"
-            >
-              <Link href="/register">Get Started</Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="rounded-full px-8 py-6 text-base font-degular"
-            >
-              <Link href="/login">Sign In</Link>
-            </Button>
+      {/* How It Works Section */}
+      <section id="how-it-works" className="py-20 lg:py-32 bg-gray-50">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl lg:text-5xl font-bold mb-4 font-degular">
+              How It Works
+            </h2>
+            <p className="text-xl text-gray-600 font-degular">
+              Get started in three simple steps
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Step 1 */}
+            <div className="text-center">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-4">
+                <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
+                  <p className="text-gray-400 text-sm font-degular">
+                    Registration Screenshot
+                  </p>
+                </div>
+              </div>
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black text-white font-bold text-lg mb-4">
+                1
+              </div>
+              <h3 className="text-xl font-semibold mb-2 font-degular">
+                Create Account
+              </h3>
+              <p className="text-gray-600 text-sm font-degular">
+                Sign up with your email to get started. No credit card required.
+              </p>
+            </div>
+
+            {/* Step 2 */}
+            <div className="text-center">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-4">
+                <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
+                  <p className="text-gray-400 text-sm font-degular">
+                    Wallet Setup Screenshot
+                  </p>
+                </div>
+              </div>
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black text-white font-bold text-lg mb-4">
+                2
+              </div>
+              <h3 className="text-xl font-semibold mb-2 font-degular">
+                Set Up Wallet
+              </h3>
+              <p className="text-gray-600 text-sm font-degular">
+                Your wallet is automatically created. Start with manual credits
+                or connect payment methods.
+              </p>
+            </div>
+
+            {/* Step 3 */}
+            <div className="text-center">
+              <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm mb-4">
+                <div className="aspect-video bg-gray-100 rounded mb-4 flex items-center justify-center">
+                  <p className="text-gray-400 text-sm font-degular">
+                    Dashboard Screenshot
+                  </p>
+                </div>
+              </div>
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-black text-white font-bold text-lg mb-4">
+                3
+              </div>
+              <h3 className="text-xl font-semibold mb-2 font-degular">
+                Start Tracking
+              </h3>
+              <p className="text-gray-600 text-sm font-degular">
+                Begin tracking transactions, view balances, and manage your
+                financial operations.
+              </p>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-black text-white py-12">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-end gap-1 mb-2">
+                <Image
+                  src="/mainstack-logo.svg"
+                  alt="Mainstack Logo"
+                  width={40}
+                  height={40}
+                  className="brightness-0 invert mb-0.5"
+                />
+                <h1 className="text-4xl font-bold text-white font-degular tracking-tight">
+                  mainstack
+                </h1>
+              </div>
+              <p className="text-gray-400 text-sm font-degular">
+                Financial ledger system built for scale and reliability.
+              </p>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 font-degular">Product</h4>
+              <ul className="space-y-2 text-sm text-gray-400 font-degular">
+                <li>
+                  <button
+                    onClick={() => {
+                      const element = document.getElementById('features');
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="hover:text-white transition-colors"
+                  >
+                    Features
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => {
+                      const element = document.getElementById('how-it-works');
+                      if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                    className="hover:text-white transition-colors"
+                  >
+                    How It Works
+                  </button>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 font-degular">Company</h4>
+              <ul className="space-y-2 text-sm text-gray-400 font-degular">
+                <li>
+                  <Link
+                    href="/about"
+                    className="hover:text-white transition-colors"
+                  >
+                    About
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/contact"
+                    className="hover:text-white transition-colors"
+                  >
+                    Contact
+                  </Link>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold mb-4 font-degular">Account</h4>
+              <ul className="space-y-2 text-sm text-gray-400 font-degular">
+                <li>
+                  <Link
+                    href="/login"
+                    className="hover:text-white transition-colors"
+                  >
+                    Login
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    href="/register"
+                    className="hover:text-white transition-colors"
+                  >
+                    Register
+                  </Link>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 pt-8 text-center">
+            <p className="text-gray-400 text-sm font-degular">
+              All rights reserved Mainstack 2025
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

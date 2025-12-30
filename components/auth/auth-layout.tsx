@@ -89,16 +89,16 @@ export function AuthLayout({ children, title, subtitle }: AuthLayoutProps) {
           {/* Center - Logo and Branding */}
           <div className="flex-1 flex flex-col justify-center items-center text-center">
             <div className="flex items-end gap-1 mb-4 transform transition-transform hover:scale-105">
-              {/* <Image
+              <Image
                 src="/mainstack-logo.svg"
                 alt="Mainstack Logo"
-                width={100}
+                width={50}
                 height={30}
-                className="brightness-0 invert drop-shadow-lg"
+                className="brightness-0 invert"
                 priority
-              /> */}
-              <h1 className="text-4xl font-bold text-white mb-2 font-degular tracking-tight">
-                Mainstack
+              />
+              <h1 className="text-4xl font-bold text-white font-degular tracking-tight">
+                mainstack
               </h1>
             </div>
             <p className="text-lg text-gray-300 max-w-md font-degular leading-relaxed">

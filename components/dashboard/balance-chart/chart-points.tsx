@@ -3,7 +3,10 @@ import { format, parseISO } from 'date-fns';
 import { Transaction } from '@/lib/types';
 import { ChartData, DailyTotal } from '@/lib/types';
 
-export function useChartData(transactions: Transaction[]): ChartData {
+export function useChartData(
+  transactions: Transaction[],
+  currency: string
+): ChartData {
   return useMemo(() => {
     if (!transactions?.length) {
       return {
@@ -15,9 +18,9 @@ export function useChartData(transactions: Transaction[]): ChartData {
       };
     }
 
-    // Filter successful transactions only and sort by date
+    // Filter by currency and successful status, then sort by date
     const sortedTransactions = [...transactions]
-      .filter((t) => t.status === 'successful')
+      .filter((t) => t.status === 'successful' && t.currency === currency)
       .sort(
         (a, b) =>
           new Date(a.date || a.created_at).getTime() -
@@ -154,5 +157,5 @@ export function useChartData(transactions: Transaction[]): ChartData {
       firstDate: totals[0]?.formattedDate || 'Apr 1, 2022',
       lastDate: totals[totals.length - 1]?.formattedDate || 'Apr 30, 2022',
     };
-  }, [transactions]);
+  }, [transactions, currency]);
 }

@@ -23,7 +23,7 @@ export function LoginForm() {
     try {
       await login(email);
       toast.success('Login successful');
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Failed to login');
     } finally {

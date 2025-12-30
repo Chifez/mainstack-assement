@@ -7,11 +7,13 @@ import { ChartLine } from './balance-chart/chart-line';
 import { ChartIndicator } from './balance-chart/chart-indicator';
 import { useChartData } from './balance-chart/chart-points';
 import { ChartTooltip } from './balance-chart/chart-tooltip';
+import { useCurrencyStore } from '@/store/currency-store';
 
 export function BalanceChart({ transactions }: BalanceChartProps) {
   const [hoveredPoint, setHoveredPoint] = useState<ChartPoint | null>(null);
+  const { selectedCurrency } = useCurrencyStore();
   const { path, fillPath, points, firstDate, lastDate } =
-    useChartData(transactions);
+    useChartData(transactions, selectedCurrency);
 
   return (
     <div className="h-[200px] relative mt-6">

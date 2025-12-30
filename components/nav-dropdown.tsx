@@ -39,15 +39,14 @@ export function NavDropdown({
             href="#"
             className={cn(
               'flex items-center justify-center gap-1.5 text-base font-semibold transition-colors rounded-full px-6 py-2',
-              'text-gray-500 ',
-              isOpen
+              isActive || isOpen
                 ? 'bg-black text-white hover:text-white hover:bg-black'
-                : 'hover:text-black hover:bg-[#EFF1F6]'
+                : 'text-gray-500 hover:text-black hover:bg-[#EFF1F6]'
             )}
-            onClick={() => setIsOpen(isOpen)}
+            onClick={() => setIsOpen(!isOpen)}
           >
             <Image
-              src={isOpen ? activeIcon : icon}
+              src={isActive || isOpen ? activeIcon : icon}
               alt={`${label} Icon`}
               width={16}
               height={16}

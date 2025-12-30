@@ -1,3 +1,5 @@
+'use client';
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -14,8 +16,20 @@ import { NavDropdown } from './nav-dropdown';
 import { UserMenu } from './user-menu';
 import { NotificationPopover } from './notification-popover';
 import { ChatPopover } from './chat-popover';
+import { usePathname } from 'next/navigation';
 
 const Desktop = ({ user, menuItems, isLoading }: any) => {
+  const pathname = usePathname();
+
+  // Determine active states based on current pathname
+  const isHomeActive =
+    pathname === '/dashboard' ||
+    pathname.startsWith('/dashboard/activity') ||
+    pathname.startsWith('/dashboard/links');
+  const isAnalyticsActive = pathname.startsWith('/dashboard/analytics/');
+  const isRevenueActive = pathname === '/dashboard/revenue';
+  const isCrmActive = pathname.startsWith('/dashboard/crm/');
+  const isAppsActive = pathname.startsWith('/dashboard/apps/');
   return (
     <>
       <nav className="mx-auto flex items-center gap-4 flex-1">
@@ -23,7 +37,7 @@ const Desktop = ({ user, menuItems, isLoading }: any) => {
           label="Home"
           icon="/home.svg"
           activeIcon="/home-white.svg"
-          isActive={false}
+          isActive={isHomeActive}
           items={homeItems}
         />
 
@@ -31,18 +45,21 @@ const Desktop = ({ user, menuItems, isLoading }: any) => {
           label="Analytics"
           icon="/analytics.svg"
           activeIcon="/analytics-white.svg"
-          isActive={false}
+          isActive={isAnalyticsActive}
           items={analyticsItems}
         />
 
         <Link
           href="/dashboard/revenue"
           className={cn(
-            'flex items-center justify-center gap-1.5 w-fit text-base font-semibold transition-colors bg-black text-white px-6 py-2 rounded-full'
+            'flex items-center justify-center gap-1.5 w-fit text-base font-semibold transition-colors px-6 py-2 rounded-full',
+            isRevenueActive
+              ? 'bg-black text-white'
+              : 'text-gray-500 hover:text-black hover:bg-[#EFF1F6]'
           )}
         >
           <Image
-            src="/revenue-white.svg"
+            src={isRevenueActive ? '/revenue-white.svg' : '/revenue.svg'}
             alt="Revenue Icon"
             width={16}
             height={16}
@@ -54,7 +71,7 @@ const Desktop = ({ user, menuItems, isLoading }: any) => {
           label="CRM"
           icon="/crm.svg"
           activeIcon="/crm-white.svg"
-          isActive={false}
+          isActive={isCrmActive}
           items={crmItems}
         />
 
@@ -62,7 +79,7 @@ const Desktop = ({ user, menuItems, isLoading }: any) => {
           label="Apps"
           icon="/widgets.svg"
           activeIcon="/widgets-white.svg"
-          isActive={false}
+          isActive={isAppsActive}
           items={appsItems}
         />
       </nav>
