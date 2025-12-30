@@ -1,31 +1,59 @@
 export interface User {
+  id: string;
   first_name: string;
   last_name: string;
   email: string;
 }
 
 export interface Wallet {
-  balance: number;
-  total_payout: number;
-  total_revenue: number;
-  pending_payout: number;
-  ledger_balance: number;
+  id: string;
+  user_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
+export interface Balance {
+  ledger_balance: number;
+  available_balance: number;
+  pending_debits: number;
+  pending_credits: number;
+  currency: string;
+}
+
+export type TransactionType = 'credit' | 'debit' | 'reversal';
+export type TransactionCategory =
+  | 'deposit'
+  | 'withdrawal'
+  | 'manual_credit'
+  | 'manual_debit'
+  | 'fee'
+  | 'refund';
+export type TransactionStatus =
+  | 'pending'
+  | 'processing'
+  | 'successful'
+  | 'failed'
+  | 'reversed';
+
 export interface Transaction {
+  id: string;
+  transaction_id: string;
+  wallet_id: string;
+  type: TransactionType;
+  transaction_category: TransactionCategory;
+  status: TransactionStatus;
   amount: number;
-  metadata: {
-    name: string;
-    type: string;
-    email: string;
-    quantity?: number;
-    country?: string;
-    product_name?: string;
-  };
+  currency: string;
+  metadata: Record<string, any>;
+  reversal_of?: string | null;
+  reversed_by?: string | null;
+  idempotency_key?: string | null;
+  sequence: number;
+  created_at: string;
+  updated_at: string;
+  // Legacy fields for backward compatibility
   payment_reference?: string;
-  status: 'successful' | 'pending' | 'failed';
-  type: string;
-  date: string;
+  date?: string;
 }
 
 export interface NavItem {

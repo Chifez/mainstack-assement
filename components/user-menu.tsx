@@ -1,3 +1,5 @@
+'use client';
+
 import {
   Bug,
   Grid,
@@ -8,9 +10,12 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { ReactNode } from 'react';
+import { useAuthStore } from '@/store/auth-store';
+import { toast } from 'sonner';
 
 export const UserMenu = ({
   user,
@@ -21,6 +26,18 @@ export const UserMenu = ({
   isMobile: boolean;
   children: ReactNode;
 }) => {
+  const router = useRouter();
+  const { logout } = useAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      toast.success('Logged out successfully');
+      router.push('/login');
+    } catch (error) {
+      toast.error('Failed to logout');
+    }
+  };
   const menuItems = [
     { icon: <Settings className="h-4 w-4" />, label: 'Settings', href: '#' },
     {
@@ -79,7 +96,10 @@ export const UserMenu = ({
             </Link>
           ))}
           <div className="border-t border-gray-100 mt-2 pt-2">
-            <button className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors">
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors"
+            >
               <span className="text-gray-500">
                 <LogOut className="h-4 w-4" />
               </span>

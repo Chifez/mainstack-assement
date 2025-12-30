@@ -1,6 +1,5 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -11,8 +10,7 @@ import {
 import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
-import { fetchUser } from '@/lib/api';
-import { User } from '@/lib/types';
+import { useAuthStore } from '@/store/auth-store';
 import {
   Settings,
   ShoppingBag,
@@ -31,10 +29,7 @@ import Mobile from './mobile-navbar';
 
 function Header() {
   const [isMobile, setIsMobile] = useState(false);
-  const { data: user, isLoading } = useQuery<User>({
-    queryKey: ['user'],
-    queryFn: fetchUser,
-  });
+  const { user, isLoading } = useAuthStore();
 
   useEffect(() => {
     const checkMobile = () => {

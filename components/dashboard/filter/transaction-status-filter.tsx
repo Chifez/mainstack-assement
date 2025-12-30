@@ -25,13 +25,16 @@ export function TransactionStatusFilter({
 
   const getDisplayText = () => {
     if (selectedStatuses.includes('all') && selectedStatuses.length === 1) {
-      return 'Successful, Pending, Failed';
+      return 'All Statuses';
     }
 
     const statusNames = {
+      all: 'All Statuses',
       successful: 'Successful',
       pending: 'Pending',
+      processing: 'Processing',
       failed: 'Failed',
+      reversed: 'Reversed',
     };
 
     return selectedStatuses
@@ -55,13 +58,20 @@ export function TransactionStatusFilter({
         <CollapsibleContent className="transition-all absolute w-full mt-1 border rounded-lg p-2 bg-background">
           <div className="space-y-1">
             {[
+              { id: 'status-all', label: 'All Statuses', value: 'all' },
               {
                 id: 'status-successful',
                 label: 'Successful',
                 value: 'successful',
               },
               { id: 'status-pending', label: 'Pending', value: 'pending' },
+              {
+                id: 'status-processing',
+                label: 'Processing',
+                value: 'processing',
+              },
               { id: 'status-failed', label: 'Failed', value: 'failed' },
+              { id: 'status-reversed', label: 'Reversed', value: 'reversed' },
             ].map(({ id, label, value }) => (
               <div key={id} className="flex items-center space-x-2 p-2">
                 <Checkbox

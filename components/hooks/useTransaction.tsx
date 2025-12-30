@@ -15,10 +15,14 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
     setIsFilterOpen,
   } = useFilterStore();
 
+  const { transactionCategory, currency } = useFilterStore();
+  
   const activeFiltersCount = [
     dateRange.from || dateRange.to ? 1 : 0,
     transactionType.length > 0 && !transactionType.includes('all') ? 1 : 0,
+    transactionCategory.length > 0 && !transactionCategory.includes('all') ? 1 : 0,
     transactionStatus.length > 0 && !transactionStatus.includes('all') ? 1 : 0,
+    currency && currency !== 'all' ? 1 : 0,
   ].reduce((acc, curr) => acc + curr, 0);
 
   const getFilterText = () => {
@@ -55,10 +59,13 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
     return 'Your transactions for All time';
   };
 
+  // Transactions are already filtered by the API, but we can do client-side filtering if needed
   const filteredTransactions = transactions?.filter((transaction) => {
-    // Date range filter
+    // Use created_at if date is not available (backward compatibility)
+    const transactionDate = new Date(transaction.date || transaction.created_at);
+    
+    // Date range filter (client-side fallback)
     if (dateRange.from && dateRange.to) {
-      const transactionDate = new Date(transaction.date);
       if (transactionDate < dateRange.from || transactionDate > dateRange.to) {
         return false;
       }
@@ -66,14 +73,28 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
 
     // Transaction type filter
     if (transactionType.length > 0 && !transactionType.includes('all')) {
-      if (!transactionType.includes(transaction?.type as any)) {
+      if (!transactionType.includes(transaction.type as any)) {
+        return false;
+      }
+    }
+
+    // Transaction category filter
+    if (transactionCategory.length > 0 && !transactionCategory.includes('all')) {
+      if (!transactionCategory.includes(transaction.transaction_category as any)) {
         return false;
       }
     }
 
     // Transaction status filter
     if (transactionStatus.length > 0 && !transactionStatus.includes('all')) {
-      if (!transactionStatus.includes(transaction.status)) {
+      if (!transactionStatus.includes(transaction.status as any)) {
+        return false;
+      }
+    }
+
+    // Currency filter
+    if (currency && currency !== 'all') {
+      if (transaction.currency !== currency) {
         return false;
       }
     }
@@ -81,32 +102,44 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
     return true;
   });
 
+  const { setTransactionCategory, setCurrency } = useFilterStore();
+  
   const handleClearFilters = () => {
     setDateRange({ from: undefined, to: undefined });
     setTransactionType(['all']);
+    setTransactionCategory(['all']);
     setTransactionStatus(['all']);
+    setCurrency('all');
   };
 
   const handleExportList = () => {
     if (!filteredTransactions) return;
 
     // Create CSV content
-    const headers = ['Date', 'Description', 'Name', 'Amount', 'Status'];
+    const headers = [
+      'Transaction ID',
+      'Date',
+      'Type',
+      'Category',
+      'Amount',
+      'Currency',
+      'Status',
+      'Description',
+      'Reference',
+    ];
     const csvContent = [
       headers.join(','),
       ...filteredTransactions.map((transaction) =>
         [
-          formatDate(transaction.date),
-          `"${(transaction.type === 'withdrawal'
-            ? 'Cash Withdrawal'
-            : transaction.metadata?.product_name || 'Unnamed Transaction'
-          ).replace(/"/g, '""')}"`,
-          `"${(transaction.type === 'withdrawal'
-            ? transaction.status
-            : transaction.metadata?.name || 'No name provided'
-          ).replace(/"/g, '""')}"`,
-          `USD ${transaction.amount}`,
+          transaction.transaction_id,
+          formatDate(transaction.date || transaction.created_at),
+          transaction.type,
+          transaction.transaction_category,
+          transaction.amount,
+          transaction.currency,
           transaction.status,
+          `"${(transaction.metadata?.description || transaction.metadata?.product_name || 'Unnamed Transaction').replace(/"/g, '""')}"`,
+          transaction.payment_reference || transaction.transaction_id,
         ].join(',')
       ),
     ].join('\n');

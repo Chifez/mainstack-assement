@@ -14,16 +14,35 @@ import { EmptyTransactions } from './empty-transaction';
 import { TransactionDetailModal } from './transaction-detail-modal';
 import useTransaction from '../hooks/useTransaction';
 import { useIsMobile } from '../hooks/useIsMobile';
+import { useFilterStore } from '@/store/filter-store';
 
 export function TransactionList({ filters }: { filters?: any[] }) {
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isMobile = useIsMobile();
+  const { dateRange, transactionType, transactionCategory, transactionStatus, currency } = useFilterStore();
+
+  // Build API filters
+  const apiFilters: any = {};
+  if (dateRange.from) apiFilters.date_from = dateRange.from.toISOString();
+  if (dateRange.to) apiFilters.date_to = dateRange.to.toISOString();
+  if (transactionType.length > 0 && !transactionType.includes('all')) {
+    apiFilters.type = transactionType[0]; // API expects single type
+  }
+  if (transactionCategory.length > 0 && !transactionCategory.includes('all')) {
+    apiFilters.transaction_category = transactionCategory[0];
+  }
+  if (transactionStatus.length > 0 && !transactionStatus.includes('all')) {
+    apiFilters.status = transactionStatus[0];
+  }
+  if (currency && currency !== 'all') {
+    apiFilters.currency = currency;
+  }
 
   const { data: transactions, isLoading } = useQuery<Transaction[]>({
-    queryKey: ['transactions'],
-    queryFn: fetchTransactions,
+    queryKey: ['transactions', apiFilters],
+    queryFn: () => fetchTransactions(apiFilters),
   });
 
   const {
@@ -89,9 +108,9 @@ export function TransactionList({ filters }: { filters?: any[] }) {
         </div>
       ) : filteredTransactions && filteredTransactions.length > 0 ? (
         <div className="space-y-6">
-          {filteredTransactions.map((transaction, index) => (
+          {filteredTransactions.map((transaction) => (
             <TransactionItem
-              key={index}
+              key={transaction.id || transaction.transaction_id}
               transaction={transaction}
               onClick={handleTransactionClick}
             />

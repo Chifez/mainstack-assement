@@ -1,80 +1,184 @@
-// export async function fetchUser() {
-//   const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/user`);
-//   if (!response.ok) {
-//     throw new Error('Failed to fetch user data');
-//   }
-//   return response.json();
-// }
+import { Transaction, User, Wallet, Balance } from './types';
+import { useSimulationStore } from '@/store/simulation-store';
 
-import { TraceState } from 'next/dist/trace';
-import { transactions, user, wallet } from './data';
-import { delay } from './helpers';
-import { Transaction } from './types';
+const API_BASE = '/api';
 
-// export async function fetchWallet() {
-//   const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/wallet`);
-//   if (!response.ok) {
-//     throw new Error('Failed to fetch wallet data');
-//   }
-//   return response.json();
-// }
+async function fetchAPI<T>(
+  endpoint: string,
+  options?: RequestInit
+): Promise<T> {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+    credentials: 'include',
+  });
 
-// export async function fetchTransactions() {
-//   try {
-//     const response = await fetch(
-//       `${process.env.NEXT_PUBLIC_BASE_URL}/transactions`
-//     );
-//     if (!response.ok) {
-//       throw new Error('Failed to fetch transactions');
-//     }
-
-//     const data = await response.json();
-
-//     console.log('data', data);
-//     // Ensure each transaction has at least an empty metadata object
-//     return data.map((transaction: any) => ({
-//       ...transaction,
-//       metadata: transaction.metadata || {},
-//       // Ensure required fields have default values
-//       status: transaction.status || 'pending',
-//       type: transaction.type || 'unknown',
-//       date: transaction.date || new Date().toISOString(),
-//       amount: transaction.amount || 0,
-//     }));
-//   } catch (error) {
-//     console.error('Error fetching transactions:', error);
-//     return [];
-//   }
-// }
-
-export async function fetchUser() {
-  await delay(Math.floor(Math.random() * 500) + 300);
-  try {
-    return JSON.parse(JSON.stringify(user));
-  } catch (error) {
-    console.log('error', error);
+  if (!response.ok) {
+    const error = await response
+      .json()
+      .catch(() => ({ error: 'Unknown error' }));
+    throw new Error(error.error || `HTTP error! status: ${response.status}`);
   }
+
+  return response.json();
 }
 
-export async function fetchWallet() {
-  await delay(Math.floor(Math.random() * 500) + 300);
-  try {
-    return JSON.parse(JSON.stringify(wallet));
-  } catch (error) {
-    console.log('error', error);
-  }
+// Auth functions
+export async function registerUser(data: {
+  first_name: string;
+  last_name: string;
+  email: string;
+}): Promise<{ user: User; wallet: Wallet }> {
+  return fetchAPI('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }
 
-export async function fetchTransactions() {
-  await delay(Math.floor(Math.random() * 500) + 300);
-  try {
-    return JSON.parse(JSON.stringify(transactions));
-  } catch (error) {
-    console.log('error', error);
-  }
+export async function loginUser(email: string): Promise<{ user: User }> {
+  return fetchAPI('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
 }
 
-interface WithdrawalRequest {
+export async function logoutUser(): Promise<void> {
+  await fetchAPI('/auth/logout', {
+    method: 'POST',
+  });
+}
+
+export async function getCurrentUser(): Promise<{ user: User }> {
+  return fetchAPI('/auth/me');
+}
+
+// User functions
+export async function fetchUser(): Promise<User> {
+  const response = await getCurrentUser();
+  return response.user;
+}
+
+// Wallet functions
+export async function fetchWallet(): Promise<Wallet> {
+  const response = await fetchAPI<{ wallet: Wallet }>('/wallets');
+  return response.wallet;
+}
+
+export async function fetchBalance(currency: string = 'USD'): Promise<Balance> {
+  const response = await fetchAPI<{ balance: Balance }>(
+    `/wallets/balance?currency=${currency}`
+  );
+  return response.balance;
+}
+
+// Transaction functions
+export interface TransactionFilters {
+  type?: string;
+  transaction_category?: string;
+  status?: string;
+  currency?: string;
+  date_from?: string;
+  date_to?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export async function fetchTransactions(
+  filters?: TransactionFilters
+): Promise<Transaction[]> {
+  const params = new URLSearchParams();
+  if (filters) {
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        params.append(key, String(value));
+      }
+    });
+  }
+
+  const queryString = params.toString();
+  const response = await fetchAPI<{ transactions: Transaction[] }>(
+    `/transactions${queryString ? `?${queryString}` : ''}`
+  );
+  return response.transactions;
+}
+
+export interface CreateTransactionRequest {
+  type: 'credit' | 'debit' | 'reversal';
+  transaction_category:
+    | 'deposit'
+    | 'withdrawal'
+    | 'manual_credit'
+    | 'manual_debit'
+    | 'fee'
+    | 'refund';
+  amount: number;
+  currency?: string;
+  metadata?: Record<string, any>;
+  idempotency_key?: string;
+}
+
+export async function createTransaction(
+  data: CreateTransactionRequest
+): Promise<Transaction> {
+  // Get simulation state - handle both client and server side
+  let simulationStore: any = null;
+  if (typeof window !== 'undefined') {
+    simulationStore = useSimulationStore.getState();
+  }
+
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+  };
+
+  // Add simulation headers
+  if (simulationStore?.simulateNetworkFailure) {
+    headers['x-simulate-network-failure'] = 'true';
+  }
+  if (simulationStore?.simulateInsufficientFunds) {
+    headers['x-simulate-insufficient-funds'] = 'true';
+  }
+  if (simulationStore?.simulateDuplicateTransaction) {
+    headers['x-simulate-duplicate'] = 'true';
+  }
+
+  const response = await fetchAPI<{ transaction: Transaction }>(
+    '/transactions',
+    {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+    }
+  );
+
+  return response.transaction;
+}
+
+export async function getTransactionById(id: string): Promise<Transaction> {
+  const response = await fetchAPI<{ transaction: Transaction }>(
+    `/transactions/${id}`
+  );
+  return response.transaction;
+}
+
+export async function reverseTransaction(
+  id: string,
+  reason?: string
+): Promise<Transaction> {
+  const response = await fetchAPI<{ reversal: Transaction }>(
+    `/transactions/${id}/reverse`,
+    {
+      method: 'POST',
+      body: JSON.stringify({ reason }),
+    }
+  );
+  return response.reversal;
+}
+
+// Withdrawal function (for backward compatibility)
+export interface WithdrawalRequest {
   amount: number;
   vatAmount: number;
   totalAmount: number;
@@ -84,62 +188,32 @@ export async function handleWithdrawal({
   amount,
   vatAmount,
   totalAmount,
-}: WithdrawalRequest) {
-  await delay(Math.floor(Math.random() * 500) + 300); // Simulate API delay
+}: WithdrawalRequest): Promise<{
+  transaction: Transaction;
+  newBalance: number;
+  newPendingPayout: number;
+  newLedgerBalance: number;
+  success: boolean;
+}> {
+  const transaction = await createTransaction({
+    type: 'debit',
+    transaction_category: 'withdrawal',
+    amount: totalAmount,
+    currency: 'USD',
+    metadata: {
+      withdrawal_amount: amount,
+      vat_amount: vatAmount,
+      total_amount: totalAmount,
+    },
+  });
 
-  try {
-    // Validate withdrawal amount
-    if (amount <= 0) {
-      throw new Error('Withdrawal amount must be greater than 0');
-    }
+  const balance = await fetchBalance('USD');
 
-    if (totalAmount > wallet.balance) {
-      throw new Error('Insufficient balance for withdrawal');
-    }
-
-    // Create new withdrawal transaction
-    const newTransaction: Transaction = {
-      type: 'withdrawal',
-      amount: amount,
-      status: 'pending',
-      date: new Date().toISOString(),
-      metadata: {
-        name: 'Jane Doe',
-        email: 'jane.doe@example.com',
-        type: 'withdrawal',
-      },
-      payment_reference: `REF${Date.now()}`,
-    };
-
-    // Update wallet balance and pending payout
-    wallet.balance = wallet.balance - totalAmount;
-    wallet.pending_payout = wallet.pending_payout + totalAmount;
-    wallet.ledger_balance = wallet.ledger_balance - totalAmount;
-
-    // Add new transaction to transactions array
-    transactions.unshift(newTransaction as any); // Add to beginning of array
-
-    // Return the updated data
-    return {
-      transaction: newTransaction,
-      newBalance: wallet.balance,
-      newPendingPayout: wallet.pending_payout,
-      newLedgerBalance: wallet.ledger_balance,
-      success: true,
-    };
-  } catch (error) {
-    console.error('Error processing withdrawal:', error);
-    throw error;
-  }
-}
-
-// Optional: Add a function to get withdrawal history
-export async function getWithdrawalHistory() {
-  await delay(Math.floor(Math.random() * 500) + 300);
-  try {
-    return transactions.filter((t) => t.type === 'withdrawal');
-  } catch (error) {
-    console.error('Error fetching withdrawal history:', error);
-    return [];
-  }
+  return {
+    transaction,
+    newBalance: balance.available_balance,
+    newPendingPayout: balance.pending_debits,
+    newLedgerBalance: balance.ledger_balance,
+    success: true,
+  };
 }

@@ -37,11 +37,11 @@ export function ChartTooltip({
               {transaction?.type === 'withdrawal' ? 'Withdrawal' : 'Deposit'}:
             </p>
             <p className="text-sm text-gray-500">
-              {formatCurrency(transaction?.amount || 0)}
+              {formatCurrency(transaction?.amount || 0, transaction?.currency || 'USD')}
             </p>
           </div>
           <p className="text-sm text-gray-500">
-            Balance: {formatCurrency(point.total)}
+            Balance: {formatCurrency(point.total, transaction?.currency || 'USD')}
           </p>
         </div>
       </TooltipContent>

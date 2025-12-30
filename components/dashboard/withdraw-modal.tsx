@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { formatCurrency } from '@/lib/utils';
 import { useQueryClient } from '@tanstack/react-query';
-import { handleWithdrawal } from '@/lib/api';
+import { createTransaction } from '@/lib/api';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -17,12 +17,14 @@ interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
   availableBalance: number;
+  currency?: string;
 }
 
 export function WithdrawModal({
   isOpen,
   onClose,
   availableBalance,
+  currency = 'USD',
 }: WithdrawModalProps) {
   const [amount, setAmount] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
@@ -48,13 +50,20 @@ export function WithdrawModal({
     try {
       setIsProcessing(true);
 
-      await handleWithdrawal({
-        amount: Number(amount),
-        vatAmount,
-        totalAmount,
+      await createTransaction({
+        type: 'debit',
+        transaction_category: 'withdrawal',
+        amount: totalAmount,
+        currency,
+        metadata: {
+          withdrawal_amount: Number(amount),
+          vat_amount: vatAmount,
+          total_amount: totalAmount,
+        },
       });
 
       await queryClient.invalidateQueries({ queryKey: ['wallet'] });
+      await queryClient.invalidateQueries({ queryKey: ['balance'] });
       await queryClient.invalidateQueries({ queryKey: ['transactions'] });
 
       toast.success('Withdrawal successful', {
@@ -82,7 +91,7 @@ export function WithdrawModal({
           <div className="space-y-2">
             <label className="text-sm text-gray-500">Available Balance</label>
             <div className="text-2xl font-bold">
-              {formatCurrency(availableBalance)}
+              {formatCurrency(availableBalance, currency)}
             </div>
           </div>
 
@@ -100,14 +109,14 @@ export function WithdrawModal({
               className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <p className="text-xs text-gray-500">
-              Maximum withdrawal: {formatCurrency(maxAmount)} (including VAT)
+              Maximum withdrawal: {formatCurrency(maxAmount, currency)} (including VAT)
             </p>
           </div>
 
           <div className="space-y-2 " aria-readonly aria-disabled>
             <label className="text-sm text-gray-500">VAT (5%)</label>
             <Input
-              value={formatCurrency(vatAmount)}
+              value={formatCurrency(vatAmount, currency)}
               readOnly
               className="bg-gray-50 cursor-default"
               disabled
@@ -117,7 +126,7 @@ export function WithdrawModal({
           <div className="space-y-2">
             <label className="text-sm text-gray-500">Total Amount</label>
             <div className="text-lg font-semibold">
-              {formatCurrency(totalAmount)}
+              {formatCurrency(totalAmount, currency)}
             </div>
           </div>
         </div>

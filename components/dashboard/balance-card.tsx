@@ -4,25 +4,29 @@ import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatCurrency } from '@/lib/utils';
-import { Transaction, Wallet } from '@/lib/types';
-import { fetchTransactions, fetchWallet } from '@/lib/api';
+import { Transaction, Balance } from '@/lib/types';
+import { fetchTransactions, fetchBalance } from '@/lib/api';
 import { BalanceChart } from './balance-chart';
 import { useState } from 'react';
 import { WithdrawModal } from './withdraw-modal';
+import { CreditWalletModal } from './credit-wallet-modal';
 
 export function BalanceCard() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
-  const { data: wallet, isLoading } = useQuery<Wallet>({
-    queryKey: ['wallet'],
-    queryFn: fetchWallet,
+  const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
+  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+
+  const { data: balance, isLoading } = useQuery<Balance>({
+    queryKey: ['balance', selectedCurrency],
+    queryFn: () => fetchBalance(selectedCurrency),
   });
+
   const { data: transactions, isLoading: isLoadingTransactions } = useQuery<
     Transaction[]
   >({
-    queryKey: ['transactions'],
-    queryFn: fetchTransactions,
+    queryKey: ['transactions', selectedCurrency],
+    queryFn: () => fetchTransactions({ currency: selectedCurrency }),
   });
-  console.log('wallet', wallet);
 
   return (
     <div className="grid gap-6">
@@ -33,17 +37,28 @@ export function BalanceCard() {
             <Skeleton className="h-10 w-48" />
           ) : (
             <p className="text-4xl font-degular font-bold">
-              {/* {formatCurrency(wallet?.balance || 0)} */}
-              USD {wallet?.balance || 0}
+              {formatCurrency(
+                balance?.available_balance || 0,
+                balance?.currency || selectedCurrency
+              )}
             </p>
           )}
         </div>
-        <Button
-          className="bg-black text-white hover:bg-black/90 rounded-full px-8"
-          onClick={() => setIsWithdrawModalOpen(true)}
-        >
-          Withdraw
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="rounded-full px-6"
+            onClick={() => setIsCreditModalOpen(true)}
+          >
+            Credit
+          </Button>
+          <Button
+            className="bg-black text-white hover:bg-black/90 rounded-full px-8"
+            onClick={() => setIsWithdrawModalOpen(true)}
+          >
+            Withdraw
+          </Button>
+        </div>
       </div>
 
       <div className="h-[200px] relative">
@@ -57,7 +72,12 @@ export function BalanceCard() {
       <WithdrawModal
         isOpen={isWithdrawModalOpen}
         onClose={() => setIsWithdrawModalOpen(false)}
-        availableBalance={wallet?.balance || 0}
+        availableBalance={balance?.available_balance || 0}
+        currency={selectedCurrency}
+      />
+      <CreditWalletModal
+        isOpen={isCreditModalOpen}
+        onClose={() => setIsCreditModalOpen(false)}
       />
     </div>
   );

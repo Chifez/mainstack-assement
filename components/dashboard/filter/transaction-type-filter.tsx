@@ -25,16 +25,14 @@ export function TransactionTypeFilter({
 
   const getDisplayText = () => {
     if (selectedTypes.includes('all') && selectedTypes.length === 1) {
-      return 'Store Transactions';
+      return 'All Types';
     }
 
     const typeNames = {
-      all: 'Store Transactions',
-      get_tipped: 'Get Tipped',
-      withdrawals: 'Withdrawals',
-      chargebacks: 'Chargebacks',
-      cashbacks: 'Cashbacks',
-      refer_earn: 'Refer & Earn',
+      all: 'All Types',
+      credit: 'Credit',
+      debit: 'Debit',
+      reversal: 'Reversal',
     };
 
     const selectedTypeNames = selectedTypes.map(
@@ -45,7 +43,7 @@ export function TransactionTypeFilter({
       return `${selectedTypeNames.join(', ').substring(0, 20)}...`;
     }
 
-    return selectedTypeNames[0] || 'Store Transactions';
+    return selectedTypeNames[0] || 'All Types';
   };
 
   return (
@@ -68,20 +66,10 @@ export function TransactionTypeFilter({
         <CollapsibleContent className="transition-all z-50 absolute w-full mt-1 border rounded-lg p-2 bg-background">
           <div className="space-y-1">
             {[
-              { id: 'type-store', label: 'Store Transactions', value: 'all' },
-              { id: 'type-tipped', label: 'Get Tipped', value: 'get_tipped' },
-              {
-                id: 'type-withdrawals',
-                label: 'Withdrawals',
-                value: 'withdrawals',
-              },
-              {
-                id: 'type-chargebacks',
-                label: 'Chargebacks',
-                value: 'chargebacks',
-              },
-              { id: 'type-cashbacks', label: 'Cashbacks', value: 'cashbacks' },
-              { id: 'type-refer', label: 'Refer & Earn', value: 'refer_earn' },
+              { id: 'type-all', label: 'All Types', value: 'all' },
+              { id: 'type-credit', label: 'Credit', value: 'credit' },
+              { id: 'type-debit', label: 'Debit', value: 'debit' },
+              { id: 'type-reversal', label: 'Reversal', value: 'reversal' },
             ].map(({ id, label, value }) => (
               <div key={id} className="flex items-center space-x-2 p-2">
                 <Checkbox

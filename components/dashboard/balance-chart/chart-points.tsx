@@ -15,21 +15,49 @@ export function useChartData(transactions: Transaction[]): ChartData {
       };
     }
 
-    // Sort transactions
-    const sortedTransactions = [...transactions].sort(
-      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
-    );
+    // Filter successful transactions only and sort by date
+    const sortedTransactions = [...transactions]
+      .filter((t) => t.status === 'successful')
+      .sort(
+        (a, b) =>
+          new Date(a.date || a.created_at).getTime() -
+          new Date(b.date || b.created_at).getTime()
+      );
+
+    // If no successful transactions, return empty chart
+    if (!sortedTransactions.length) {
+      return {
+        path: 'M0,100 L700,100',
+        fillPath: 'M0,100 L700,100 L700,180 L0,180 Z',
+        points: [],
+        firstDate: 'Apr 1, 2022',
+        lastDate: 'Apr 30, 2022',
+      };
+    }
 
     // Process transactions
     const balanceMap = new Map<string, number>();
     let runningBalance = 0;
 
     sortedTransactions.forEach((transaction) => {
-      const dateStr = format(new Date(transaction.date), 'yyyy-MM-dd');
-      runningBalance +=
-        transaction.type === 'withdrawal'
-          ? -transaction.amount
+      const dateStr = format(
+        new Date(transaction.date || transaction.created_at),
+        'yyyy-MM-dd'
+      );
+      // Calculate balance change based on type
+      const amount =
+        typeof transaction.amount === 'string'
+          ? parseFloat(transaction.amount)
           : transaction.amount;
+
+      if (transaction.type === 'credit') {
+        runningBalance += amount;
+      } else if (transaction.type === 'debit') {
+        runningBalance -= amount;
+      } else if (transaction.type === 'reversal') {
+        // Reversals adjust the balance back
+        runningBalance -= amount;
+      }
       balanceMap.set(dateStr, runningBalance);
     });
 
@@ -40,6 +68,17 @@ export function useChartData(transactions: Transaction[]): ChartData {
         total,
       })
     );
+
+    // If no totals after processing, return empty chart
+    if (!totals.length) {
+      return {
+        path: 'M0,100 L700,100',
+        fillPath: 'M0,100 L700,100 L700,180 L0,180 Z',
+        points: [],
+        firstDate: 'Apr 1, 2022',
+        lastDate: 'Apr 30, 2022',
+      };
+    }
 
     // Generate chart paths
     const width = 700;
@@ -56,16 +95,40 @@ export function useChartData(transactions: Transaction[]): ChartData {
     );
 
     const range = max - min;
-    const pointDistance = width / (totals.length - 1);
+    // Handle case when there's only one point
+    const pointDistance = totals.length > 1 ? width / (totals.length - 1) : 0;
 
     const points = totals.map(({ total, formattedDate }, index) => {
-      const x = index * pointDistance;
+      const x = totals.length > 1 ? index * pointDistance : width / 2;
       const y =
         range === 0
           ? padding + availableHeight / 2
           : height - (((total - min) / range) * availableHeight + padding);
       return { x, y, total, date: formattedDate };
     });
+
+    // Handle empty points array or single point
+    if (!points.length) {
+      return {
+        path: 'M0,100 L700,100',
+        fillPath: 'M0,100 L700,100 L700,180 L0,180 Z',
+        points: [],
+        firstDate: 'Apr 1, 2022',
+        lastDate: 'Apr 30, 2022',
+      };
+    }
+
+    // Handle single point case
+    if (points.length === 1) {
+      const point = points[0];
+      return {
+        path: `M${point.x},${point.y} L${point.x},${point.y}`,
+        fillPath: `M${point.x},${height} L${point.x},${point.y} L${point.x},${height} Z`,
+        points,
+        firstDate: totals[0]?.formattedDate || 'Apr 1, 2022',
+        lastDate: totals[0]?.formattedDate || 'Apr 30, 2022',
+      };
+    }
 
     let path = `M${points[0].x},${points[0].y}`;
     let fillPath = `M${points[0].x},${height} L${points[0].x},${points[0].y}`;

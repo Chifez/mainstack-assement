@@ -121,3 +121,70 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Animated Logo Styles */
+.animated-logo-svg {
+  color: currentColor;
+}
+
+.animated-logo-path {
+  fill: currentColor;
+  stroke: currentColor;
+  stroke-width: 0.5;
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: drawPath 1.2s ease-in-out infinite;
+  opacity: 0;
+}
+
+.animated-logo-path-1 {
+  animation-delay: 0s;
+}
+
+.animated-logo-path-2 {
+  animation-delay: 0.15s;
+}
+
+.animated-logo-path-3 {
+  animation-delay: 0.3s;
+}
+
+.animated-logo-path-4 {
+  animation-delay: 0.45s;
+}
+
+.animated-logo-path-5 {
+  animation-delay: 0.6s;
+}
+
+@keyframes drawPath {
+  0% {
+    stroke-dashoffset: 200;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  90% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: -200;
+    opacity: 0;
+  }
+}
+
+/* Hide scrollbar but keep functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
+}
