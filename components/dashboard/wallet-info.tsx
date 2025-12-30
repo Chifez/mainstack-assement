@@ -6,10 +6,10 @@ import { Info } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { fetchBalance } from '@/lib/api';
 import { Balance } from '@/lib/types';
-import { useState } from 'react';
+import { useCurrencyStore } from '@/store/currency-store';
 
 export function WalletInfo() {
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const { selectedCurrency, setCurrency } = useCurrencyStore();
   const { data: balance, isLoading } = useQuery<Balance>({
     queryKey: ['balance', selectedCurrency],
     queryFn: () => fetchBalance(selectedCurrency),
@@ -41,7 +41,7 @@ export function WalletInfo() {
         </label>
         <select
           value={selectedCurrency}
-          onChange={(e) => setSelectedCurrency(e.target.value)}
+          onChange={(e) => setCurrency(e.target.value)}
           className="flex h-10 w-fit rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
           <option value="USD">USD</option>

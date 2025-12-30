@@ -156,6 +156,19 @@ export async function createTransaction(
   return response.transaction;
 }
 
+export async function createManualTransaction(
+  data: CreateTransactionRequest
+): Promise<Transaction> {
+  const response = await fetchAPI<{ transaction: Transaction }>(
+    '/transactions/manual',
+    {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }
+  );
+  return response.transaction;
+}
+
 export async function getTransactionById(id: string): Promise<Transaction> {
   const response = await fetchAPI<{ transaction: Transaction }>(
     `/transactions/${id}`

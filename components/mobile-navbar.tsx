@@ -52,7 +52,7 @@ const Mobile = ({ user, menuItems, isMobile }: any) => {
               />
 
               <Link
-                href="#"
+                href="/dashboard/revenue"
                 className={cn(
                   'flex items-center gap-3 px-4 py-2.5 hover:bg-gray-50 transition-colors'
                 )}

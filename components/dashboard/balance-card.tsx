@@ -10,11 +10,12 @@ import { BalanceChart } from './balance-chart';
 import { useState } from 'react';
 import { WithdrawModal } from './withdraw-modal';
 import { CreditWalletModal } from './credit-wallet-modal';
+import { useCurrencyStore } from '@/store/currency-store';
 
 export function BalanceCard() {
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
   const [isCreditModalOpen, setIsCreditModalOpen] = useState(false);
-  const [selectedCurrency, setSelectedCurrency] = useState('USD');
+  const { selectedCurrency } = useCurrencyStore();
 
   const { data: balance, isLoading } = useQuery<Balance>({
     queryKey: ['balance', selectedCurrency],

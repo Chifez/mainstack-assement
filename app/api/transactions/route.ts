@@ -20,6 +20,7 @@ import {
 } from '@/lib/utils/simulations';
 import { createAuditLog } from '@/lib/db/queries/audit';
 import { InsufficientFundsError } from '@/lib/utils/errors';
+import { transactionProcessor } from '@/lib/services/transaction-processor';
 
 export async function GET(request: Request) {
   try {
@@ -179,6 +180,21 @@ export async function POST(request: Request) {
       user_id: user.id,
       changes: { created: true },
     });
+
+    // Add to processing queue for async status updates
+    // Only process regular transactions (not manual ones)
+    if (
+      transaction.transaction_category !== 'manual_credit' &&
+      transaction.transaction_category !== 'manual_debit'
+    ) {
+      transactionProcessor.addToQueue(
+        transaction.id,
+        transaction.wallet_id,
+        user.id,
+        transaction.type as 'credit' | 'debit',
+        transaction.transaction_category
+      );
+    }
 
     return NextResponse.json(
       {

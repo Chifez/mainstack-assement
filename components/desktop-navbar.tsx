@@ -36,7 +36,7 @@ const Desktop = ({ user, menuItems, isLoading }: any) => {
         />
 
         <Link
-          href="#"
+          href="/dashboard/revenue"
           className={cn(
             'flex items-center justify-center gap-1.5 w-fit text-base font-semibold transition-colors bg-black text-white px-6 py-2 rounded-full'
           )}
