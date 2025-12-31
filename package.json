@@ -10,7 +10,8 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "lint": "next lint",
-    "migrate": "tsx --env-file=.env lib/db/migrations/migrate.ts"
+    "migrate": "tsx --env-file=.env lib/db/migrations/migrate.ts",
+    "migrate:prod": "tsx lib/db/migrations/migrate.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.3",

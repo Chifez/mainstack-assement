@@ -21,3 +21,4 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to get user' }, { status: 500 });
   }
 }
+

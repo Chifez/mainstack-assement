@@ -24,3 +24,4 @@ export async function createWallet(userId: string): Promise<WalletRow> {
   );
   return result[0];
 }
+

@@ -93,3 +93,4 @@ export async function getAuditLogs(
 
   return query<AuditLogRow>(sql, params);
 }
+

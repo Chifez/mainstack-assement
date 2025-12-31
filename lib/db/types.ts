@@ -70,3 +70,4 @@ export interface BalanceResult {
   pending_debits: string;
   pending_credits: string;
 }
+

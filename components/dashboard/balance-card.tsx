@@ -29,29 +29,6 @@ export function BalanceCard() {
     queryFn: () => fetchTransactions({ currency: selectedCurrency }),
   });
 
-  // #region agent log
-  if (transactions) {
-    fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        location: 'balance-card.tsx:30',
-        message: 'Transactions fetched',
-        data: {
-          transactionsCount: transactions.length,
-          selectedCurrency,
-          currencies: transactions.map((t) => t.currency),
-          statuses: transactions.map((t) => t.status),
-        },
-        timestamp: Date.now(),
-        sessionId: 'debug-session',
-        runId: 'run1',
-        hypothesisId: 'E',
-      }),
-    }).catch(() => {});
-  }
-  // #endregion
-
   return (
     <div className="grid gap-6">
       <div className="flex flex-row items-center gap-12">
