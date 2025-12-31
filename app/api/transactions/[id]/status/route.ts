@@ -12,12 +12,12 @@ const updateStatusSchema = z.object({
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth();
     const body = await request.json();
-    const { id } = params;
+    const { id } = await params;
 
     // Validate request body
     const validated = updateStatusSchema.parse(body);
@@ -54,6 +54,13 @@ export async function PATCH(
 
     // Update status
     const updated = await updateTransactionStatus(id, newStatus);
+
+    if (!updated) {
+      return NextResponse.json(
+        { error: 'Failed to update transaction status' },
+        { status: 500 }
+      );
+    }
 
     // Create audit log
     await createAuditLog({
@@ -98,5 +105,3 @@ export async function PATCH(
     );
   }
 }
-
-

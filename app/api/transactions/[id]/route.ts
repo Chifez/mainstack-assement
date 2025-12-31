@@ -14,11 +14,12 @@ import { NotFoundError } from '@/lib/utils/errors';
 
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireAuth();
-    const transaction = await getTransactionById(params.id);
+    const { id } = await params;
+    const transaction = await getTransactionById(id);
 
     if (!transaction) {
       return NextResponse.json(
@@ -52,11 +53,12 @@ export async function GET(
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = await requireAuth();
-    const transaction = await getTransactionById(params.id);
+    const { id } = await params;
+    const transaction = await getTransactionById(id);
 
     if (!transaction) {
       throw new NotFoundError('Transaction');
@@ -129,4 +131,3 @@ export async function POST(
     );
   }
 }
-
