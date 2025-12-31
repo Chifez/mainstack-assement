@@ -27,7 +27,7 @@ export function RegisterForm() {
     try {
       await register(formData);
       toast.success('Registration successful');
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       toast.error(error.message || 'Failed to register');
     } finally {
