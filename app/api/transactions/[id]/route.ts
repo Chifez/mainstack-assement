@@ -39,10 +39,7 @@ export async function GET(
     });
   } catch (error: any) {
     if (error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.error('Get transaction error:', error);
@@ -78,10 +75,7 @@ export async function POST(
       const body = await request.json();
       const validated = reverseTransactionSchema.parse(body);
 
-      const reversal = await createReversal(
-        transaction.id,
-        validated.reason
-      );
+      const reversal = await createReversal(transaction.id, validated.reason);
 
       if (!reversal) {
         return NextResponse.json(
@@ -111,23 +105,14 @@ export async function POST(
       });
     }
 
-    return NextResponse.json(
-      { error: 'Invalid endpoint' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Invalid endpoint' }, { status: 400 });
   } catch (error: any) {
     if (error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     if (error instanceof NotFoundError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
     if (error.name === 'ZodError') {
@@ -144,4 +129,3 @@ export async function POST(
     );
   }
 }
-

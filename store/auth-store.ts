@@ -7,7 +7,11 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string) => Promise<void>;
-  register: (data: { first_name: string; last_name: string; email: string }) => Promise<void>;
+  register: (data: {
+    first_name: string;
+    last_name: string;
+    email: string;
+  }) => Promise<void>;
   logout: () => Promise<void>;
   checkAuth: () => Promise<void>;
 }
@@ -73,4 +77,3 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
   },
 }));
-

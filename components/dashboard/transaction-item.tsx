@@ -86,7 +86,11 @@ export function TransactionItem({
     if (transaction.transaction_category === 'refund') {
       return 'Refund';
     }
-    return transaction.metadata?.product_name || transaction.metadata?.description || 'Transaction';
+    return (
+      transaction.metadata?.product_name ||
+      transaction.metadata?.description ||
+      'Transaction'
+    );
   };
 
   return (
@@ -97,18 +101,22 @@ export function TransactionItem({
       <div className="flex items-center gap-3">
         {getTransactionIcon(transaction.type, transaction.transaction_category)}
         <div>
-          <div className="font-medium">
-            {getTransactionLabel(transaction)}
-          </div>
+          <div className="font-medium">{getTransactionLabel(transaction)}</div>
           <div className={`text-sm ${getStatusColor(transaction.status)}`}>
-            {transaction.status.charAt(0).toUpperCase() + transaction.status.slice(1)}
+            {transaction.status.charAt(0).toUpperCase() +
+              transaction.status.slice(1)}
             {transaction.metadata?.name && ` • ${transaction.metadata.name}`}
           </div>
         </div>
       </div>
       <div className="text-right">
-        <div className={`text-base font-bold ${transaction.type === 'debit' ? 'text-red-600' : 'text-emerald-600'}`}>
-          {transaction.type === 'debit' ? '-' : '+'}{transaction.currency} {transaction.amount}
+        <div
+          className={`text-base font-bold ${
+            transaction.type === 'debit' ? 'text-red-600' : 'text-emerald-600'
+          }`}
+        >
+          {transaction.type === 'debit' ? '-' : '+'}
+          {transaction.currency} {transaction.amount}
         </div>
         <div className="text-sm text-muted-foreground">
           {formatDate(transaction.date || transaction.created_at)}

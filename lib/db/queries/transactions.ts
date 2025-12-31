@@ -200,7 +200,7 @@ export async function createReversal(
 export async function checkIdempotency(
   key: string
 ): Promise<TransactionRow | null> {
-  const result = await query<IdempotencyKeyRow>(
+  const result = await query<TransactionRow>(
     `SELECT t.* FROM transactions t
      INNER JOIN idempotency_keys ik ON t.id = ik.transaction_id
      WHERE ik.key = $1`,
@@ -208,8 +208,7 @@ export async function checkIdempotency(
   );
 
   if (result.length > 0) {
-    const transactionId = result[0].transaction_id;
-    return getTransactionById(transactionId);
+    return result[0];
   }
 
   return null;

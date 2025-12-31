@@ -16,11 +16,13 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
   } = useFilterStore();
 
   const { transactionCategory, currency } = useFilterStore();
-  
+
   const activeFiltersCount = [
     dateRange.from || dateRange.to ? 1 : 0,
     transactionType.length > 0 && !transactionType.includes('all') ? 1 : 0,
-    transactionCategory.length > 0 && !transactionCategory.includes('all') ? 1 : 0,
+    transactionCategory.length > 0 && !transactionCategory.includes('all')
+      ? 1
+      : 0,
     transactionStatus.length > 0 && !transactionStatus.includes('all') ? 1 : 0,
     currency && currency !== 'all' ? 1 : 0,
   ].reduce((acc, curr) => acc + curr, 0);
@@ -62,8 +64,10 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
   // Transactions are already filtered by the API, but we can do client-side filtering if needed
   const filteredTransactions = transactions?.filter((transaction) => {
     // Use created_at if date is not available (backward compatibility)
-    const transactionDate = new Date(transaction.date || transaction.created_at);
-    
+    const transactionDate = new Date(
+      transaction.date || transaction.created_at
+    );
+
     // Date range filter (client-side fallback)
     if (dateRange.from && dateRange.to) {
       if (transactionDate < dateRange.from || transactionDate > dateRange.to) {
@@ -79,8 +83,13 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
     }
 
     // Transaction category filter
-    if (transactionCategory.length > 0 && !transactionCategory.includes('all')) {
-      if (!transactionCategory.includes(transaction.transaction_category as any)) {
+    if (
+      transactionCategory.length > 0 &&
+      !transactionCategory.includes('all')
+    ) {
+      if (
+        !transactionCategory.includes(transaction.transaction_category as any)
+      ) {
         return false;
       }
     }
@@ -103,7 +112,7 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
   });
 
   const { setTransactionCategory, setCurrency } = useFilterStore();
-  
+
   const handleClearFilters = () => {
     setDateRange({ from: undefined, to: undefined });
     setTransactionType(['all']);
@@ -138,7 +147,11 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
           transaction.amount,
           transaction.currency,
           transaction.status,
-          `"${(transaction.metadata?.description || transaction.metadata?.product_name || 'Unnamed Transaction').replace(/"/g, '""')}"`,
+          `"${(
+            transaction.metadata?.description ||
+            transaction.metadata?.product_name ||
+            'Unnamed Transaction'
+          ).replace(/"/g, '""')}"`,
           transaction.payment_reference || transaction.transaction_id,
         ].join(',')
       ),

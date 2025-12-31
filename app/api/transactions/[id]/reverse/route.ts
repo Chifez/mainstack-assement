@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
-import { getTransactionById, createReversal } from '@/lib/db/queries/transactions';
+import {
+  getTransactionById,
+  createReversal,
+} from '@/lib/db/queries/transactions';
 import {
   validateTransactionCanBeReversed,
   reverseTransactionSchema,
@@ -60,17 +63,11 @@ export async function POST(
     });
   } catch (error: any) {
     if (error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     if (error instanceof NotFoundError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: error.message }, { status: 404 });
     }
 
     if (error.name === 'ZodError') {
@@ -87,4 +84,3 @@ export async function POST(
     );
   }
 }
-

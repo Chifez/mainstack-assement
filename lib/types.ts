@@ -83,6 +83,8 @@ export interface ChartPoint {
   y: number;
   total: number;
   date: string;
+  transactionType?: 'credit' | 'debit' | 'reversal';
+  transactionId?: string;
 }
 
 export interface ChartData {

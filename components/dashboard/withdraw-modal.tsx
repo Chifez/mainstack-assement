@@ -109,7 +109,8 @@ export function WithdrawModal({
               className="[appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
             <p className="text-xs text-gray-500">
-              Maximum withdrawal: {formatCurrency(maxAmount, currency)} (including VAT)
+              Maximum withdrawal: {formatCurrency(maxAmount, currency)}{' '}
+              (including VAT)
             </p>
           </div>
 

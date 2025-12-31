@@ -51,7 +51,10 @@ export async function calculatePendingBalance(
   walletId: string,
   currency: string = 'USD'
 ): Promise<{ pending_debits: string; pending_credits: string }> {
-  const result = await queryOne<{ pending_debits: string; pending_credits: string }>(
+  const result = await queryOne<{
+    pending_debits: string;
+    pending_credits: string;
+  }>(
     `SELECT 
       COALESCE(SUM(CASE 
         WHEN type = 'debit' AND status = 'pending' THEN amount 
@@ -73,4 +76,3 @@ export async function calculatePendingBalance(
     }
   );
 }
-

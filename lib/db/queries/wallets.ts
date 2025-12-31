@@ -2,8 +2,12 @@ import { query, queryOne } from '../index';
 import { WalletRow } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
-export async function getWalletByUserId(userId: string): Promise<WalletRow | null> {
-  return queryOne<WalletRow>('SELECT * FROM wallets WHERE user_id = $1', [userId]);
+export async function getWalletByUserId(
+  userId: string
+): Promise<WalletRow | null> {
+  return queryOne<WalletRow>('SELECT * FROM wallets WHERE user_id = $1', [
+    userId,
+  ]);
 }
 
 export async function getWalletById(id: string): Promise<WalletRow | null> {
@@ -20,4 +24,3 @@ export async function createWallet(userId: string): Promise<WalletRow> {
   );
   return result[0];
 }
-

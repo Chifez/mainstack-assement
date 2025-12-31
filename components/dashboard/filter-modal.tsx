@@ -77,7 +77,13 @@ export function FilterModal() {
     setLocalTransactionCategory(transactionCategory);
     setLocalTransactionStatus(transactionStatus);
     setLocalCurrency(currency);
-  }, [dateRange, transactionType, transactionCategory, transactionStatus, currency]);
+  }, [
+    dateRange,
+    transactionType,
+    transactionCategory,
+    transactionStatus,
+    currency,
+  ]);
 
   const handleApply = () => {
     setDateRange(localDateRange);
@@ -143,7 +149,9 @@ export function FilterModal() {
         ? [...localTransactionCategory.filter((c) => c !== 'all'), category]
         : localTransactionCategory.filter((c) => c !== category);
 
-      setLocalTransactionCategory(newCategories.length ? newCategories : ['all']);
+      setLocalTransactionCategory(
+        newCategories.length ? newCategories : ['all']
+      );
     }
   };
 

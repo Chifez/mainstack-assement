@@ -39,4 +39,3 @@ export async function requireAuth(): Promise<UserRow> {
   }
   return user;
 }
-

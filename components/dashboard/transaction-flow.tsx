@@ -172,9 +172,14 @@ function CustomFlowNode({ data }: { data: FlowNodeData }) {
             {JSON.stringify(data.json, null, 2)}
           </pre>
         ) : (
-          <div className="space-y-2">
-            {Object.entries(data.json).map(([key, value]) => (
-              <div key={key} className="flex gap-2 text-xs">
+          <div className="space-y-0">
+            {Object.entries(data.json).map(([key, value], index) => (
+              <div
+                key={key}
+                className={`flex gap-2 text-xs px-2 py-1.5 ${
+                  index % 2 === 0 ? 'bg-gray-50' : 'bg-white'
+                }`}
+              >
                 <span className="font-semibold text-gray-600 min-w-[100px]">
                   {key}:
                 </span>
@@ -318,8 +323,7 @@ export function TransactionFlow({ transaction }: TransactionFlowProps) {
     });
 
     // Audit Log Node
-    const auditX =
-      dbInsertX + horizontalSpacing * (statusUpdates.length + 1);
+    const auditX = dbInsertX + horizontalSpacing * (statusUpdates.length + 1);
     nodes.push({
       id: 'audit',
       type: 'custom',
@@ -484,6 +488,11 @@ export function TransactionFlow({ transaction }: TransactionFlowProps) {
           fitView
           fitViewOptions={{ padding: 0.2, maxZoom: 1.5, minZoom: 0.5 }}
           defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+          panOnDrag={[1, 2]}
+          panOnScroll={true}
+          nodesDraggable={false}
+          nodesConnectable={false}
+          // elementsSelectable={false}
         >
           <Background />
           <Controls />

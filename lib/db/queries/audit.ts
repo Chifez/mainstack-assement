@@ -11,7 +11,9 @@ export interface CreateAuditLogData {
   ip_address?: string;
 }
 
-export async function createAuditLog(data: CreateAuditLogData): Promise<AuditLogRow> {
+export async function createAuditLog(
+  data: CreateAuditLogData
+): Promise<AuditLogRow> {
   const id = uuidv4();
   const result = await query<AuditLogRow>(
     `INSERT INTO audit_logs (
@@ -91,4 +93,3 @@ export async function getAuditLogs(
 
   return query<AuditLogRow>(sql, params);
 }
-

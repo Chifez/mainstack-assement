@@ -36,10 +36,7 @@ export async function GET(request: Request) {
     });
   } catch (error: any) {
     if (error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.error('Get audit logs error:', error);
@@ -49,4 +46,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

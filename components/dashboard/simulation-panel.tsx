@@ -76,9 +76,7 @@ export function SimulationPanel() {
                   id="network-failure"
                   type="checkbox"
                   checked={simulateNetworkFailure}
-                  onChange={(e) =>
-                    setSimulateNetworkFailure(e.target.checked)
-                  }
+                  onChange={(e) => setSimulateNetworkFailure(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300"
                 />
               </div>
@@ -152,4 +150,3 @@ export function SimulationPanel() {
     </div>
   );
 }
-

@@ -30,4 +30,3 @@ export async function queryOne<T = any>(
 }
 
 export { pool };
-

@@ -158,7 +158,8 @@ export async function POST(request: Request) {
     if (isDuplicate && existingTransaction) {
       return NextResponse.json(
         {
-          message: 'Transaction already exists',
+          message:
+            'This transaction has already been processed. Duplicate transaction detected.',
           transaction: {
             ...existingTransaction,
             amount: parseFloat(existingTransaction.amount),

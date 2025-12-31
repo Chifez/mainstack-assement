@@ -21,7 +21,13 @@ export function TransactionList({ filters }: { filters?: any[] }) {
     useState<Transaction | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isMobile = useIsMobile();
-  const { dateRange, transactionType, transactionCategory, transactionStatus, currency } = useFilterStore();
+  const {
+    dateRange,
+    transactionType,
+    transactionCategory,
+    transactionStatus,
+    currency,
+  } = useFilterStore();
 
   // Build API filters
   const apiFilters: any = {};

@@ -15,6 +15,14 @@ export function BalanceChart({ transactions }: BalanceChartProps) {
   const { path, fillPath, points, firstDate, lastDate } =
     useChartData(transactions, selectedCurrency);
 
+  // #region agent log
+  fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'balance-chart.tsx:14',message:'BalanceChart render',data:{transactionsCount:transactions?.length||0,selectedCurrency,path:path?.substring(0,50),fillPath:fillPath?.substring(0,50),pointsCount:points?.length||0},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
+  // #endregion
+
+  // Ensure we always have valid paths
+  const validPath = path || 'M0,100 L700,100';
+  const validFillPath = fillPath || 'M0,100 L700,100 L700,180 L0,180 Z';
+
   return (
     <div className="h-[200px] relative mt-6">
       <TooltipProvider>
@@ -26,11 +34,11 @@ export function BalanceChart({ transactions }: BalanceChartProps) {
           className="cursor-pointer"
           onMouseLeave={() => setHoveredPoint(null)}
         >
-          <ChartLine path={path} fillPath={fillPath} />
+          <ChartLine path={validPath} fillPath={validFillPath} />
 
           {/* Hover detection for the fill area */}
           <path
-            d={fillPath}
+            d={validFillPath}
             fill="transparent"
             stroke="none"
             onMouseMove={(e) => {

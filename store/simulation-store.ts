@@ -13,11 +13,9 @@ export const useSimulationStore = create<SimulationState>((set) => ({
   simulateNetworkFailure: false,
   simulateInsufficientFunds: false,
   simulateDuplicateTransaction: false,
-  setSimulateNetworkFailure: (value) =>
-    set({ simulateNetworkFailure: value }),
+  setSimulateNetworkFailure: (value) => set({ simulateNetworkFailure: value }),
   setSimulateInsufficientFunds: (value) =>
     set({ simulateInsufficientFunds: value }),
   setSimulateDuplicateTransaction: (value) =>
     set({ simulateDuplicateTransaction: value }),
 }));
-

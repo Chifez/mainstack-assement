@@ -9,10 +9,7 @@ export async function GET(request: Request) {
     const wallet = await getWalletByUserId(user.id);
 
     if (!wallet) {
-      return NextResponse.json(
-        { error: 'Wallet not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
     }
 
     const { searchParams } = new URL(request.url);
@@ -31,10 +28,7 @@ export async function GET(request: Request) {
     });
   } catch (error: any) {
     if (error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     console.error('Get balance error:', error);
@@ -44,4 +38,3 @@ export async function GET(request: Request) {
     );
   }
 }
-

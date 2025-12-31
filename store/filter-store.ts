@@ -5,11 +5,7 @@ export type DateRange = {
   to: Date | undefined;
 };
 
-export type TransactionType =
-  | 'all'
-  | 'credit'
-  | 'debit'
-  | 'reversal';
+export type TransactionType = 'all' | 'credit' | 'debit' | 'reversal';
 
 export type TransactionCategory =
   | 'all'
@@ -65,7 +61,8 @@ export const useFilterStore = create<FilterState>((set) => ({
   setIsFilterOpen: (isOpen) => set({ isFilterOpen: isOpen }),
   setDateRange: (range) => set({ dateRange: range }),
   setTransactionType: (types) => set({ transactionType: types }),
-  setTransactionCategory: (categories) => set({ transactionCategory: categories }),
+  setTransactionCategory: (categories) =>
+    set({ transactionCategory: categories }),
   setTransactionStatus: (statuses) => set({ transactionStatus: statuses }),
   setCurrency: (currency) => set({ currency }),
   resetFilters: () => set(initialState),

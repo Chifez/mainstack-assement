@@ -24,10 +24,7 @@ export class NotFoundError extends AppError {
 }
 
 export class InsufficientFundsError extends AppError {
-  constructor(
-    public availableBalance: number,
-    public requiredAmount: number
-  ) {
+  constructor(public availableBalance: number, public requiredAmount: number) {
     super(
       `Insufficient funds. Available: ${availableBalance}, Required: ${requiredAmount}`,
       400,
@@ -43,4 +40,3 @@ export class UnauthorizedError extends AppError {
     this.name = 'UnauthorizedError';
   }
 }
-

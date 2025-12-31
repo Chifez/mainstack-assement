@@ -1,4 +1,7 @@
-import { checkIdempotency, storeIdempotencyKey } from '@/lib/db/queries/transactions';
+import {
+  checkIdempotency,
+  storeIdempotencyKey,
+} from '@/lib/db/queries/transactions';
 import { TransactionRow } from '@/lib/db/types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -9,7 +12,11 @@ export function generateIdempotencyKey(): string {
 export async function ensureIdempotency<T>(
   key: string | undefined,
   operation: () => Promise<T>
-): Promise<{ result: T; isDuplicate: boolean; existingTransaction?: TransactionRow }> {
+): Promise<{
+  result: T;
+  isDuplicate: boolean;
+  existingTransaction?: TransactionRow;
+}> {
   if (!key) {
     const result = await operation();
     return { result, isDuplicate: false };
@@ -35,4 +42,3 @@ export async function ensureIdempotency<T>(
 
   return { result, isDuplicate: false };
 }
-

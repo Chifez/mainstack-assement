@@ -26,4 +26,3 @@ export async function createUser(data: CreateUserData): Promise<UserRow> {
   );
   return result[0];
 }
-
