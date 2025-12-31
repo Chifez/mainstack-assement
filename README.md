@@ -109,7 +109,7 @@ The technology stack was chosen for convenience, out-of-the-box tooling, optimiz
 
 ### Core Technologies
 
-- **Next.js 15.2.4** - React framework for production
+- **Next.js 15.2.6** - React framework for production
 
   - App Router for better performance and SEO
   - Server Components and API Routes
