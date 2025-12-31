@@ -1,3 +1,15 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Performance Analytics',
+  description:
+    'View your analytics data and performance metrics. Analyze transaction trends and financial performance.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function PerformancePage() {
   return (
     <div className="space-y-6">

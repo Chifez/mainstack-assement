@@ -1,3 +1,15 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Traffic Sources',
+  description:
+    'Analyze where your visitors come from. Track traffic sources and user acquisition channels.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function TrafficSourcesPage() {
   return (
     <div className="space-y-6">

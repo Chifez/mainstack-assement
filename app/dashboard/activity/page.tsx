@@ -1,3 +1,15 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Activity',
+  description:
+    'View your recent activities and transactions. Monitor all financial operations and system events.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function ActivityPage() {
   return (
     <div className="space-y-6">

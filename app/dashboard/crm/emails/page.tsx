@@ -1,3 +1,15 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Email Campaigns',
+  description:
+    'Manage your email campaigns and templates. Create and send email communications to your contacts.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function EmailsPage() {
   return (
     <div className="space-y-6">

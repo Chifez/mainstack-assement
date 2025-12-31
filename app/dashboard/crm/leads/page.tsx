@@ -1,3 +1,15 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Leads',
+  description:
+    'Track and manage potential customers. Monitor lead generation and conversion metrics.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function LeadsPage() {
   return (
     <div className="space-y-6">

@@ -4,6 +4,17 @@ import { TransactionList } from '@/components/dashboard/transaction-list';
 import { FilterModal } from '@/components/dashboard/filter-modal';
 import { FloatingToolbar } from '@/components/dashboard/floating-toolbar';
 import { SimulationPanel } from '@/components/dashboard/simulation-panel';
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Dashboard',
+  description:
+    'View your wallet balance, transaction history, and financial activity. Manage multi-currency transactions with real-time balance updates.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 export default function DashboardPage() {
   return (

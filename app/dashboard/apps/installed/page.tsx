@@ -1,3 +1,15 @@
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Installed Apps',
+  description:
+    'Manage your installed applications. View and configure apps integrated with your financial ledger system.',
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
 export default function InstalledAppsPage() {
   return (
     <div className="space-y-6">

@@ -20,30 +20,64 @@ const degular = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'Mainstack - Admin Dashboard',
-  description: 'Mainstack Frontend Assessment',
+  title: {
+    default: 'Financial Ledger System - Enterprise Transaction Management',
+    template: '%s | Financial Ledger System',
+  },
+  description:
+    'Enterprise-grade financial ledger and wallet management system. Track, manage, and audit transactions with multi-currency support, real-time balance calculations, and comprehensive audit trails.',
+  keywords: [
+    'financial ledger',
+    'transaction management',
+    'wallet system',
+    'multi-currency',
+    'audit trail',
+    'financial dashboard',
+    'transaction tracking',
+    'balance management',
+  ],
+  authors: [{ name: 'Mainstack' }],
+  creator: 'Mainstack',
+  publisher: 'Mainstack',
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
   openGraph: {
-    title: 'Mainstack - Admin Dashboard',
-    description: 'Mainstack Admin Financial Dashboard Frontend Assessment',
     type: 'website',
-    locale: 'en-US',
-    url: 'https://mainstack-assesment.vercel.app',
+    locale: 'en_US',
+    url: 'https://mainstack-assement.vercel.app',
+    siteName: 'Financial Ledger System',
+    title: 'Financial Ledger System - Enterprise Transaction Management',
+    description:
+      'Track, manage, and audit transactions with enterprise-grade reliability. Built for correctness, auditability, and resilience.',
     images: [
       {
         url: '/opengraph-image.png',
         width: 1200,
         height: 620,
-        alt: 'Mainstack - Admin Dashboard',
+        alt: 'Financial Ledger System Dashboard',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Mainstack - Admin Dashboard',
-    description: 'Mainstack Admin Financial Dashboard Frontend Assessment',
+    title: 'Financial Ledger System - Enterprise Transaction Management',
+    description:
+      'Track, manage, and audit transactions with enterprise-grade reliability.',
     images: ['/twitter-image.png'],
   },
-  metadataBase: new URL('https://mainstack-assesment.vercel.app'),
+  metadataBase: new URL('https://mainstack-assement.vercel.app'),
+  alternates: {
+    canonical: '/',
+  },
 };
 
 export default function RootLayout({
