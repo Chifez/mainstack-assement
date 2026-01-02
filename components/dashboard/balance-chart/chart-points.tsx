@@ -18,15 +18,22 @@ export function useChartData(
       };
     }
 
-    // Filter by currency and successful status, then sort by date
-    const beforeFilter = transactions.length;
+    // Filter by currency, include successful, voided, and reversals
+    // Then sort by date
     const currencyMatches = transactions.filter((t) => {
       return t.currency === currency;
     });
-    const statusMatches = currencyMatches.filter((t) => {
-      return t.status === 'successful';
+    // Include transactions that affect balance (matching balance query logic):
+    // - Successful credits, debits, and reversals
+    // - Voided debits (they still count as withdrawals and must be subtracted)
+    const relevantTransactions = currencyMatches.filter((t) => {
+      // Include all successful transactions (credits, debits, reversals)
+      if (t.status === 'successful') return true;
+      // Include voided debits (withdrawals) - they must be subtracted from balance
+      if (t.status === 'void' && t.type === 'debit') return true;
+      return false;
     });
-    const sortedTransactions = statusMatches.sort((a, b) => {
+    const sortedTransactions = relevantTransactions.sort((a, b) => {
       const dateA = a.date || a.created_at;
       const dateB = b.date || b.created_at;
       const parsedA = new Date(dateA);
@@ -34,7 +41,7 @@ export function useChartData(
       return parsedA.getTime() - parsedB.getTime();
     });
 
-    // If no successful transactions, return empty chart
+    // If no relevant transactions, return empty chart
     if (!sortedTransactions.length) {
       return {
         path: 'M0,100 L700,100',
@@ -67,25 +74,34 @@ export function useChartData(
           ? parseFloat(transaction.amount)
           : transaction.amount;
 
-      // Add credits and reversals, subtract withdrawals (voided or successful)
+      // Calculate balance change based on type - match balance query logic:
+      // Add credits (successful), add reversals (successful), subtract debits (successful or void)
+      let balanceChange = 0;
       if (transaction.type === 'credit' && transaction.status === 'successful') {
+        balanceChange = amount;
         runningBalance += amount;
       } else if (transaction.type === 'reversal' && transaction.status === 'successful') {
         // Reversals add money back
+        balanceChange = amount;
         runningBalance += amount;
       } else if (transaction.type === 'debit' && (transaction.status === 'successful' || transaction.status === 'void')) {
         // Subtract withdrawals whether they're successful or voided
+        balanceChange = -amount;
         runningBalance -= amount;
       }
+      // Skip other statuses (pending, processing, failed) as they don't affect balance
 
-      // Create a point for each transaction
-      balancePoints.push({
-        timestamp,
-        balance: runningBalance,
-        date: format(transactionDate, 'MMM d, yyyy'),
-        transactionType: transaction.type,
-        transactionId: transaction.id,
-      });
+      // Create a point for each transaction that affects balance
+      // This includes voided debits so they appear on the chart
+      if (balanceChange !== 0) {
+        balancePoints.push({
+          timestamp,
+          balance: runningBalance,
+          date: format(transactionDate, 'MMM d, yyyy'),
+          transactionType: transaction.type,
+          transactionId: transaction.id,
+        });
+      }
     });
 
     // Convert to DailyTotal format for compatibility
