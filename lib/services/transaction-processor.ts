@@ -1,4 +1,4 @@
-import { updateTransactionStatus } from '@/lib/db/queries/transactions';
+import { updateTransactionStatus, createReversal } from '@/lib/db/queries/transactions';
 import { createAuditLog } from '@/lib/db/queries/audit';
 import { TransactionStatus } from '@/lib/db/types';
 
@@ -9,6 +9,8 @@ interface ProcessingJob {
   type: 'credit' | 'debit';
   category: string;
   startedAt: number;
+  forceFailure?: boolean;
+  shouldReverse?: boolean;
 }
 
 class TransactionProcessor {
@@ -21,7 +23,9 @@ class TransactionProcessor {
     walletId: string,
     userId: string,
     type: 'credit' | 'debit',
-    category: string
+    category: string,
+    forceFailure?: boolean,
+    shouldReverse?: boolean
   ) {
     this.queue.push({
       transactionId,
@@ -30,6 +34,8 @@ class TransactionProcessor {
       type,
       category,
       startedAt: Date.now(),
+      forceFailure,
+      shouldReverse,
     });
 
     if (!this.processing) {
@@ -69,8 +75,8 @@ class TransactionProcessor {
       const finalDelay = 2000 + Math.random() * 1000; // 2-3 seconds
       await new Promise((resolve) => setTimeout(resolve, finalDelay));
 
-      // Simulate occasional failures
-      const shouldFail = Math.random() < this.failureRate;
+      // Simulate occasional failures or force failure for network simulation
+      const shouldFail = job.forceFailure || Math.random() < this.failureRate;
       const finalStatus: TransactionStatus = shouldFail ? 'failed' : 'successful';
 
       await updateTransactionStatus(job.transactionId, finalStatus);
@@ -81,6 +87,27 @@ class TransactionProcessor {
         user_id: job.userId,
         changes: { status: finalStatus },
       });
+
+      // Handle reversal simulation - create reversal after transaction completes
+      if (job.shouldReverse) {
+        try {
+          const reversal = await createReversal(
+            job.transactionId,
+            'Simulated reversal after transaction completion'
+          );
+          if (reversal) {
+            await createAuditLog({
+              action: 'REVERSE',
+              entity_type: 'TRANSACTION',
+              entity_id: job.transactionId,
+              user_id: job.userId,
+              changes: { reversed_by: reversal.id },
+            });
+          }
+        } catch (reversalError) {
+          console.error('Error creating reversal:', reversalError);
+        }
+      }
     } catch (error) {
       console.error('Error processing transaction:', error);
       // Mark as failed on error

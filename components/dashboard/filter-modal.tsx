@@ -1,37 +1,14 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { format } from 'date-fns';
-import { CalendarIcon, ChevronDown, X, XIcon } from 'lucide-react';
-
+import { XIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Calendar } from '@/components/ui/calendar';
-import { Checkbox } from '@/components/ui/checkbox';
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
-import { cn } from '@/lib/utils';
-import {
-  type DateRange,
   type TransactionStatus,
   type TransactionType,
-  type TransactionCategory,
   useFilterStore,
 } from '@/store/filter-store';
+
 import {
   SheetContent,
   SheetFooter,
@@ -40,23 +17,23 @@ import {
   Sheet,
   SheetClose,
 } from '../ui/sheet';
+
 import { QuickFilterButton } from './filter/quick-filter-button';
 import { DateRangePicker } from './filter/date-range-picker';
 import { TransactionTypeFilter } from './filter/transaction-type-filter';
 import { TransactionStatusFilter } from './filter/transaction-status-filter';
+import { CurrencyFilter } from './filter/currency-filter';
 
 export function FilterModal() {
   const {
     isFilterOpen,
     dateRange,
     transactionType,
-    transactionCategory,
     transactionStatus,
     currency,
     setIsFilterOpen,
     setDateRange,
     setTransactionType,
-    setTransactionCategory,
     setTransactionStatus,
     setCurrency,
   } = useFilterStore();
@@ -64,8 +41,6 @@ export function FilterModal() {
   const [localDateRange, setLocalDateRange] = useState(dateRange);
   const [localTransactionType, setLocalTransactionType] =
     useState<TransactionType[]>(transactionType);
-  const [localTransactionCategory, setLocalTransactionCategory] =
-    useState<TransactionCategory[]>(transactionCategory);
   const [localTransactionStatus, setLocalTransactionStatus] =
     useState<TransactionStatus[]>(transactionStatus);
   const [localCurrency, setLocalCurrency] = useState(currency);
@@ -74,21 +49,13 @@ export function FilterModal() {
   useEffect(() => {
     setLocalDateRange(dateRange);
     setLocalTransactionType(transactionType);
-    setLocalTransactionCategory(transactionCategory);
     setLocalTransactionStatus(transactionStatus);
     setLocalCurrency(currency);
-  }, [
-    dateRange,
-    transactionType,
-    transactionCategory,
-    transactionStatus,
-    currency,
-  ]);
+  }, [dateRange, transactionType, transactionStatus, currency]);
 
   const handleApply = () => {
     setDateRange(localDateRange);
     setTransactionType(localTransactionType);
-    setTransactionCategory(localTransactionCategory);
     setTransactionStatus(localTransactionStatus);
     setCurrency(localCurrency);
     setIsFilterOpen(false);
@@ -97,13 +64,11 @@ export function FilterModal() {
   const handleClear = () => {
     setLocalDateRange({ from: undefined, to: undefined });
     setLocalTransactionType(['all']);
-    setLocalTransactionCategory(['all']);
     setLocalTransactionStatus(['all']);
     setLocalCurrency('all');
     // Reset the store filters
     setDateRange({ from: undefined, to: undefined });
     setTransactionType(['all']);
-    setTransactionCategory(['all']);
     setTransactionStatus(['all']);
     setCurrency('all');
   };
@@ -138,30 +103,11 @@ export function FilterModal() {
     }
   };
 
-  const handleTransactionCategoryChange = (
-    category: TransactionCategory,
-    checked: boolean
-  ) => {
-    if (category === 'all' && checked) {
-      setLocalTransactionCategory(['all']);
-    } else {
-      const newCategories = checked
-        ? [...localTransactionCategory.filter((c) => c !== 'all'), category]
-        : localTransactionCategory.filter((c) => c !== category);
-
-      setLocalTransactionCategory(
-        newCategories.length ? newCategories : ['all']
-      );
-    }
-  };
-
   const hasActiveFilters =
     localDateRange.from ||
     localDateRange.to ||
     (localTransactionType.length > 0 &&
       !localTransactionType.includes('all')) ||
-    (localTransactionCategory.length > 0 &&
-      !localTransactionCategory.includes('all')) ||
     (localTransactionStatus.length > 0 &&
       !localTransactionStatus.includes('all')) ||
     (localCurrency && localCurrency !== 'all');
@@ -178,9 +124,9 @@ export function FilterModal() {
           </div>
         </SheetHeader>
 
-        <div className="space-y-6">
+        <div className="flex-1 space-y-6 overflow-y-auto overflow-x-hidden scrollbar-hide">
           {/* Quick date filters */}
-          <div className="flex flex-wrap md:flex-nowrap gap-2 lg:gap-1">
+          <div className="flex flex-wrap md:flex-nowrap overflow-x-auto scrollbar-hide gap-2 lg:gap-1">
             <QuickFilterButton
               label="Today"
               onClick={() =>
@@ -222,68 +168,20 @@ export function FilterModal() {
             onDateRangeChange={setLocalDateRange}
           />
 
-          <TransactionTypeFilter
-            selectedTypes={localTransactionType}
-            onTypeChange={handleTransactionTypeChange}
-          />
-
           <TransactionStatusFilter
             selectedStatuses={localTransactionStatus}
             onStatusChange={handleTransactionStatusChange}
           />
 
-          {/* Currency Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Currency</label>
-            <select
-              value={localCurrency}
-              onChange={(e) => setLocalCurrency(e.target.value)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="all">All Currencies</option>
-              <option value="USD">USD</option>
-              <option value="EUR">EUR</option>
-              <option value="NGN">NGN</option>
-              <option value="GBP">GBP</option>
-            </select>
-          </div>
+          <TransactionTypeFilter
+            selectedTypes={localTransactionType}
+            onTypeChange={handleTransactionTypeChange}
+          />
 
-          {/* Transaction Category Filter */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Transaction Category</label>
-            <div className="space-y-2">
-              {[
-                'all',
-                'deposit',
-                'withdrawal',
-                'manual_credit',
-                'manual_debit',
-                'fee',
-                'refund',
-              ].map((category) => (
-                <div key={category} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`category-${category}`}
-                    checked={localTransactionCategory.includes(
-                      category as TransactionCategory
-                    )}
-                    onCheckedChange={(checked) =>
-                      handleTransactionCategoryChange(
-                        category as TransactionCategory,
-                        checked as boolean
-                      )
-                    }
-                  />
-                  <label
-                    htmlFor={`category-${category}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize"
-                  >
-                    {category.replace('_', ' ')}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </div>
+          <CurrencyFilter
+            selectedCurrency={localCurrency}
+            onCurrencyChange={setLocalCurrency}
+          />
         </div>
 
         <SheetFooter className="flex flex-row justify-between sm:justify-between">

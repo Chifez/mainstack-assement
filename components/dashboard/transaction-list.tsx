@@ -24,7 +24,6 @@ export function TransactionList({ filters }: { filters?: any[] }) {
   const {
     dateRange,
     transactionType,
-    transactionCategory,
     transactionStatus,
     currency,
   } = useFilterStore();
@@ -35,9 +34,6 @@ export function TransactionList({ filters }: { filters?: any[] }) {
   if (dateRange.to) apiFilters.date_to = dateRange.to.toISOString();
   if (transactionType.length > 0 && !transactionType.includes('all')) {
     apiFilters.type = transactionType[0]; // API expects single type
-  }
-  if (transactionCategory.length > 0 && !transactionCategory.includes('all')) {
-    apiFilters.transaction_category = transactionCategory[0];
   }
   if (transactionStatus.length > 0 && !transactionStatus.includes('all')) {
     apiFilters.status = transactionStatus[0];

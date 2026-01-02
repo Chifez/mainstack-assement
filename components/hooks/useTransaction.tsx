@@ -15,14 +15,11 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
     setIsFilterOpen,
   } = useFilterStore();
 
-  const { transactionCategory, currency } = useFilterStore();
+  const { currency } = useFilterStore();
 
   const activeFiltersCount = [
     dateRange.from || dateRange.to ? 1 : 0,
     transactionType.length > 0 && !transactionType.includes('all') ? 1 : 0,
-    transactionCategory.length > 0 && !transactionCategory.includes('all')
-      ? 1
-      : 0,
     transactionStatus.length > 0 && !transactionStatus.includes('all') ? 1 : 0,
     currency && currency !== 'all' ? 1 : 0,
   ].reduce((acc, curr) => acc + curr, 0);
@@ -82,18 +79,6 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
       }
     }
 
-    // Transaction category filter
-    if (
-      transactionCategory.length > 0 &&
-      !transactionCategory.includes('all')
-    ) {
-      if (
-        !transactionCategory.includes(transaction.transaction_category as any)
-      ) {
-        return false;
-      }
-    }
-
     // Transaction status filter
     if (transactionStatus.length > 0 && !transactionStatus.includes('all')) {
       if (!transactionStatus.includes(transaction.status as any)) {
@@ -111,12 +96,11 @@ const useTransaction = ({ transactions }: { transactions: Transaction[] }) => {
     return true;
   });
 
-  const { setTransactionCategory, setCurrency } = useFilterStore();
+  const { setCurrency } = useFilterStore();
 
   const handleClearFilters = () => {
     setDateRange({ from: undefined, to: undefined });
     setTransactionType(['all']);
-    setTransactionCategory(['all']);
     setTransactionStatus(['all']);
     setCurrency('all');
   };

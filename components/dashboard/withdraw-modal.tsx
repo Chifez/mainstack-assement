@@ -50,7 +50,7 @@ export function WithdrawModal({
     try {
       setIsProcessing(true);
 
-      await createTransaction({
+      const transaction = await createTransaction({
         type: 'debit',
         transaction_category: 'withdrawal',
         amount: totalAmount,
@@ -66,9 +66,13 @@ export function WithdrawModal({
       await queryClient.invalidateQueries({ queryKey: ['balance'] });
       await queryClient.invalidateQueries({ queryKey: ['transactions'] });
 
-      toast.success('Withdrawal successful', {
-        description: 'Your withdrawal request has been processed.',
-      });
+      // Only show success toast if it's not a duplicate
+      // Duplicate transactions already show a warning toast in createTransaction
+      if (!transaction.isDuplicate) {
+        toast.success('Withdrawal successful', {
+          description: 'Your withdrawal request has been processed.',
+        });
+      }
       setAmount('');
       onClose();
     } catch (error: any) {

@@ -91,11 +91,8 @@ export async function POST(request: Request) {
       request.headers.get('x-simulate-insufficient-funds') === 'true';
     const simulateDuplicate =
       request.headers.get('x-simulate-duplicate') === 'true';
-
-    // Network failure simulation
-    if (simulateNetwork) {
-      await simulateNetworkFailure();
-    }
+    const simulateReversal =
+      request.headers.get('x-simulate-reversal') === 'true';
 
     const body = await request.json();
     const validated = createTransactionSchema.parse({
@@ -158,6 +155,7 @@ export async function POST(request: Request) {
     if (isDuplicate && existingTransaction) {
       return NextResponse.json(
         {
+          isDuplicate: true,
           message:
             'This transaction has already been processed. Duplicate transaction detected.',
           transaction: {
@@ -167,6 +165,7 @@ export async function POST(request: Request) {
               typeof existingTransaction.metadata === 'string'
                 ? JSON.parse(existingTransaction.metadata)
                 : existingTransaction.metadata,
+            isDuplicate: true,
           },
         },
         { status: 200 }
@@ -193,7 +192,9 @@ export async function POST(request: Request) {
         transaction.wallet_id,
         user.id,
         transaction.type as 'credit' | 'debit',
-        transaction.transaction_category
+        transaction.transaction_category,
+        simulateNetwork, // forceFailure flag
+        simulateReversal // shouldReverse flag
       );
     }
 

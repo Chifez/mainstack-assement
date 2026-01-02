@@ -23,6 +23,23 @@ export function TransactionStatusFilter({
 }: TransactionStatusFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
 
+  const T_STATUS = [
+    { id: 'status-all', label: 'All Statuses', value: 'all' },
+    {
+      id: 'status-successful',
+      label: 'Successful',
+      value: 'successful',
+    },
+    { id: 'status-pending', label: 'Pending', value: 'pending' },
+    {
+      id: 'status-processing',
+      label: 'Processing',
+      value: 'processing',
+    },
+    { id: 'status-failed', label: 'Failed', value: 'failed' },
+    { id: 'status-reversed', label: 'Reversed', value: 'reversed' },
+  ];
+
   const getDisplayText = () => {
     if (selectedStatuses.includes('all') && selectedStatuses.length === 1) {
       return 'All Statuses';
@@ -43,9 +60,13 @@ export function TransactionStatusFilter({
   };
 
   return (
-    <div className="relative space-y-2">
+    <div className="space-y-2">
       <label className="text-sm font-medium">Transaction Status</label>
-      <Collapsible open={isOpen} onOpenChange={setIsOpen} className="w-full">
+      <Collapsible
+        open={isOpen}
+        onOpenChange={setIsOpen}
+        className="relative w-full"
+      >
         <CollapsibleTrigger asChild>
           <Button
             variant="outline"
@@ -55,24 +76,9 @@ export function TransactionStatusFilter({
             <ChevronDown className="h-4 w-4" />
           </Button>
         </CollapsibleTrigger>
-        <CollapsibleContent className="transition-all absolute w-full mt-1 border rounded-lg p-2 bg-background">
+        <CollapsibleContent className="transition-all absolute z-50 w-full mt-1 border rounded-lg p-2 bg-background">
           <div className="space-y-1">
-            {[
-              { id: 'status-all', label: 'All Statuses', value: 'all' },
-              {
-                id: 'status-successful',
-                label: 'Successful',
-                value: 'successful',
-              },
-              { id: 'status-pending', label: 'Pending', value: 'pending' },
-              {
-                id: 'status-processing',
-                label: 'Processing',
-                value: 'processing',
-              },
-              { id: 'status-failed', label: 'Failed', value: 'failed' },
-              { id: 'status-reversed', label: 'Reversed', value: 'reversed' },
-            ].map(({ id, label, value }) => (
+            {T_STATUS.map(({ id, label, value }) => (
               <div key={id} className="flex items-center space-x-2 p-2">
                 <Checkbox
                   id={id}

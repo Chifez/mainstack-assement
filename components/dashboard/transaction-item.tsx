@@ -101,7 +101,14 @@ export function TransactionItem({
       <div className="flex items-center gap-3">
         {getTransactionIcon(transaction.type, transaction.transaction_category)}
         <div>
-          <div className="font-medium">{getTransactionLabel(transaction)}</div>
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{getTransactionLabel(transaction)}</span>
+            {transaction.isDuplicate && (
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                Duplicate
+              </span>
+            )}
+          </div>
           <div className={`text-sm ${getStatusColor(transaction.status)}`}>
             {transaction.status.charAt(0).toUpperCase() +
               transaction.status.slice(1)}

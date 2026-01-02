@@ -54,6 +54,7 @@ export interface Transaction {
   // Legacy fields for backward compatibility
   payment_reference?: string;
   date?: string;
+  isDuplicate?: boolean;
 }
 
 export interface NavItem {

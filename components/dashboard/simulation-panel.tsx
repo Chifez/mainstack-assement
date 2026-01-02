@@ -15,15 +15,18 @@ export function SimulationPanel() {
     simulateNetworkFailure,
     simulateInsufficientFunds,
     simulateDuplicateTransaction,
+    simulateReversal,
     setSimulateNetworkFailure,
     setSimulateInsufficientFunds,
     setSimulateDuplicateTransaction,
+    setSimulateReversal,
   } = useSimulationStore();
 
   const activeCount = [
     simulateNetworkFailure,
     simulateInsufficientFunds,
     simulateDuplicateTransaction,
+    simulateReversal,
   ].filter(Boolean).length;
 
   return (
@@ -66,8 +69,9 @@ export function SimulationPanel() {
                     </PopoverTrigger>
                     <PopoverContent className="w-64">
                       <p className="text-sm">
-                        Simulates a network timeout/error. Demonstrates React
-                        Query retry logic and error handling.
+                        Creates the transaction but forces it to fail during
+                        processing. The failed transaction will appear in the
+                        transaction list.
                       </p>
                     </PopoverContent>
                   </Popover>
@@ -140,6 +144,35 @@ export function SimulationPanel() {
                   onChange={(e) =>
                     setSimulateDuplicateTransaction(e.target.checked)
                   }
+                  className="h-4 w-4 rounded border-gray-300"
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="reversal-simulation"
+                    className="text-sm font-medium"
+                  >
+                    Reversal Simulation
+                  </label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Info className="h-4 w-4 text-gray-400 cursor-help" />
+                    </PopoverTrigger>
+                    <PopoverContent className="w-64">
+                      <p className="text-sm">
+                        Creates a transaction, processes it, then automatically
+                        creates a reversal after completion.
+                      </p>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <input
+                  id="reversal-simulation"
+                  type="checkbox"
+                  checked={simulateReversal}
+                  onChange={(e) => setSimulateReversal(e.target.checked)}
                   className="h-4 w-4 rounded border-gray-300"
                 />
               </div>

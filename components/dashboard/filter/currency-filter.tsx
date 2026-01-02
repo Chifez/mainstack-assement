@@ -10,52 +10,38 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import { type TransactionType } from '@/store/filter-store';
 
-interface TransactionTypeFilterProps {
-  selectedTypes: TransactionType[];
-  onTypeChange: (type: TransactionType, checked: boolean) => void;
+interface CurrencyFilterProps {
+  selectedCurrency: string | 'all';
+  onCurrencyChange: (currency: string | 'all') => void;
 }
 
-export function TransactionTypeFilter({
-  selectedTypes,
-  onTypeChange,
-}: TransactionTypeFilterProps) {
+const CURRENCIES = [
+  { id: 'currency-all', label: 'All Currencies', value: 'all' },
+  { id: 'currency-usd', label: 'USD', value: 'USD' },
+  { id: 'currency-eur', label: 'EUR', value: 'EUR' },
+  { id: 'currency-ngn', label: 'NGN', value: 'NGN' },
+  { id: 'currency-gbp', label: 'GBP', value: 'GBP' },
+];
+
+export function CurrencyFilter({
+  selectedCurrency,
+  onCurrencyChange,
+}: CurrencyFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  const T_TYPE = [
-    { id: 'type-all', label: 'All Types', value: 'all' },
-    { id: 'type-credit', label: 'Credit', value: 'credit' },
-    { id: 'type-debit', label: 'Debit', value: 'debit' },
-    { id: 'type-reversal', label: 'Reversal', value: 'reversal' },
-  ];
-
   const getDisplayText = () => {
-    if (selectedTypes.includes('all') && selectedTypes.length === 1) {
-      return 'All Types';
+    if (selectedCurrency === 'all') {
+      return 'All Currencies';
     }
 
-    const typeNames = {
-      all: 'All Types',
-      credit: 'Credit',
-      debit: 'Debit',
-      reversal: 'Reversal',
-    };
-
-    const selectedTypeNames = selectedTypes.map(
-      (type) => typeNames[type as keyof typeof typeNames]
-    );
-
-    if (selectedTypeNames.length > 1) {
-      return `${selectedTypeNames.join(', ').substring(0, 20)}...`;
-    }
-
-    return selectedTypeNames[0] || 'All Types';
+    const currency = CURRENCIES.find((c) => c.value === selectedCurrency);
+    return currency?.label || 'All Currencies';
   };
 
   return (
     <div className="space-y-2">
-      <label className="text-sm font-medium">Transaction Type</label>
+      <label className="text-sm font-medium">Currency</label>
       <Collapsible
         open={isOpen}
         onOpenChange={setIsOpen}
@@ -72,14 +58,16 @@ export function TransactionTypeFilter({
         </CollapsibleTrigger>
         <CollapsibleContent className="transition-all z-50 absolute w-full lg:bottom-full border rounded-lg p-2 bg-background">
           <div className="space-y-1">
-            {T_TYPE.map(({ id, label, value }) => (
+            {CURRENCIES.map(({ id, label, value }) => (
               <div key={id} className="flex items-center space-x-2 p-2">
                 <Checkbox
                   id={id}
-                  checked={selectedTypes.includes(value as TransactionType)}
-                  onCheckedChange={(checked) =>
-                    onTypeChange(value as TransactionType, checked as boolean)
-                  }
+                  checked={selectedCurrency === value}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      onCurrencyChange(value);
+                    }
+                  }}
                 />
                 <label htmlFor={id} className="text-sm">
                   {label}

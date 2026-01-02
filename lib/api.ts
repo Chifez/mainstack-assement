@@ -1,5 +1,6 @@
 import { Transaction, User, Wallet, Balance } from './types';
 import { useSimulationStore } from '@/store/simulation-store';
+import { toast } from 'sonner';
 
 const API_BASE = '/api';
 
@@ -143,15 +144,26 @@ export async function createTransaction(
   if (simulationStore?.simulateDuplicateTransaction) {
     headers['x-simulate-duplicate'] = 'true';
   }
+  if (simulationStore?.simulateReversal) {
+    headers['x-simulate-reversal'] = 'true';
+  }
 
-  const response = await fetchAPI<{ transaction: Transaction }>(
-    '/transactions',
-    {
-      method: 'POST',
-      headers,
-      body: JSON.stringify(data),
-    }
-  );
+  const response = await fetchAPI<{
+    transaction: Transaction;
+    isDuplicate?: boolean;
+    message?: string;
+  }>('/transactions', {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(data),
+  });
+
+  // Handle duplicate transactions
+  if (response.isDuplicate && response.message) {
+    toast.warning('Duplicate Transaction', {
+      description: response.message,
+    });
+  }
 
   return response.transaction;
 }
