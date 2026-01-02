@@ -33,7 +33,8 @@ export type TransactionStatus =
   | 'processing'
   | 'successful'
   | 'failed'
-  | 'reversed';
+  | 'reversed'
+  | 'void';
 
 export interface Transaction {
   id: string;

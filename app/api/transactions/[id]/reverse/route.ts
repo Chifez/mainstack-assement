@@ -10,6 +10,7 @@ import {
 } from '@/lib/utils/validation';
 import { createAuditLog } from '@/lib/db/queries/audit';
 import { NotFoundError } from '@/lib/utils/errors';
+import { transactionProcessor } from '@/lib/services/transaction-processor';
 
 export async function POST(
   request: Request,
@@ -51,6 +52,20 @@ export async function POST(
       user_id: user.id,
       changes: { reversed_by: reversal.id },
     });
+
+    // Add reversal to processing queue
+    // Reversals are credits (bring money back), so use 'credit' type for processing
+    // Mark as isReversal so it never fails
+    transactionProcessor.addToQueue(
+      reversal.id,
+      reversal.wallet_id,
+      user.id,
+      'credit',
+      reversal.transaction_category,
+      false, // forceFailure
+      false, // shouldReverse
+      true // isReversal
+    );
 
     return NextResponse.json({
       reversal: {

@@ -29,6 +29,7 @@ export async function runMigrations() {
     const migrationFiles = [
       '001_initial_schema.sql',
       '002_update_amount_precision.sql',
+      '003_add_void_status.sql',
     ];
 
     for (const migrationFile of migrationFiles) {

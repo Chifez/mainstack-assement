@@ -7,7 +7,14 @@ import { TransactionStatus } from '@/lib/db/types';
 import { z } from 'zod';
 
 const updateStatusSchema = z.object({
-  status: z.enum(['pending', 'processing', 'successful', 'failed', 'reversed']),
+  status: z.enum([
+    'pending',
+    'processing',
+    'successful',
+    'failed',
+    'reversed',
+    'void',
+  ]),
 });
 
 export async function PATCH(
@@ -35,9 +42,10 @@ export async function PATCH(
     const validTransitions: Record<TransactionStatus, TransactionStatus[]> = {
       pending: ['processing', 'failed'],
       processing: ['successful', 'failed'],
-      successful: ['reversed'],
+      successful: ['reversed', 'void'],
       failed: [],
       reversed: [],
+      void: [],
     };
 
     const currentStatus = existing.status as TransactionStatus;

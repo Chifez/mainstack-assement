@@ -187,6 +187,9 @@ export async function POST(request: Request) {
       transaction.transaction_category !== 'manual_credit' &&
       transaction.transaction_category !== 'manual_debit'
     ) {
+      // #region agent log
+      fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'transactions/route.ts:190',message:'Adding transaction to queue',data:{transactionId:transaction.id,type:transaction.type,category:transaction.transaction_category,simulateNetwork,simulateReversal},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'A'})}).catch(()=>{});
+      // #endregion
       transactionProcessor.addToQueue(
         transaction.id,
         transaction.wallet_id,

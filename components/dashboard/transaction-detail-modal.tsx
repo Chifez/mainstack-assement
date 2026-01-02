@@ -16,7 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { formatDate, formatCurrency } from '@/lib/utils';
 import { Transaction } from '@/lib/types';
-import { Download, Copy, Check } from 'lucide-react';
+import { Download, Copy, Check, X } from 'lucide-react';
 import { useState } from 'react';
 import Image from 'next/image';
 import { TransactionFlow } from './transaction-flow';
@@ -52,12 +52,40 @@ export function TransactionDetailModal({
         return 'bg-red-100 text-red-800';
       case 'reversed':
         return 'bg-gray-100 text-gray-800';
+      case 'void':
+        return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getTransactionIcon = (type: string, category: string) => {
+  const getTransactionIcon = (
+    type: string,
+    category: string,
+    status: string
+  ) => {
+    // Voided transactions get a different icon
+    if (status === 'void') {
+      return (
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-orange-100">
+          <X className="h-8 w-8 text-orange-600" />
+        </div>
+      );
+    }
+    if (type === 'reversal') {
+      // Reversals are credits (bring money back), so use credit icon
+      return (
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+          <Image
+            src="/call_received.svg"
+            height={16}
+            width={16}
+            alt="reversal"
+            priority
+          />
+        </div>
+      );
+    }
     if (type === 'debit' || category === 'withdrawal') {
       return (
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
@@ -66,19 +94,6 @@ export function TransactionDetailModal({
             height={16}
             width={16}
             alt="debit"
-            priority
-          />
-        </div>
-      );
-    }
-    if (type === 'reversal') {
-      return (
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
-          <Image
-            src="/call_made.svg"
-            height={16}
-            width={16}
-            alt="reversal"
             priority
           />
         </div>
@@ -136,21 +151,55 @@ export function TransactionDetailModal({
     URL.revokeObjectURL(url);
   };
 
+  const getTransactionTitle = (transaction: Transaction) => {
+    // Reversals should always show as "Reversal"
+    if (transaction.type === 'reversal') {
+      return 'Reversal';
+    }
+    if (transaction.transaction_category === 'withdrawal') {
+      return 'Cash Withdrawal';
+    }
+    if (transaction.transaction_category === 'deposit') {
+      return 'Deposit';
+    }
+    if (transaction.transaction_category === 'manual_credit') {
+      return 'Credit';
+    }
+    if (transaction.transaction_category === 'manual_debit') {
+      return 'Debit';
+    }
+    if (transaction.transaction_category === 'fee') {
+      return 'Fee';
+    }
+    if (transaction.transaction_category === 'refund') {
+      return 'Refund';
+    }
+    return (
+      transaction.metadata?.product_name ||
+      transaction.metadata?.description ||
+      'Transaction'
+    );
+  };
+
   const headerContent = (
     <div className="flex items-center gap-4 pb-4 border-b">
-      {getTransactionIcon(transaction.type, transaction.transaction_category)}
+      {getTransactionIcon(
+        transaction.type,
+        transaction.transaction_category,
+        transaction.status
+      )}
       <div className="flex-1">
         <h3 className="text-lg font-semibold">
-          {transaction.transaction_category === 'withdrawal'
-            ? 'Cash Withdrawal'
-            : transaction.transaction_category === 'deposit'
-            ? 'Deposit'
-            : transaction.metadata?.product_name ||
-              transaction.metadata?.description ||
-              'Transaction'}
+          {getTransactionTitle(transaction)}
         </h3>
         <p className="text-2xl font-bold text-gray-900">
-          {transaction.currency} {transaction.amount}
+          {transaction.currency}{' '}
+          {(transaction.transaction_category === 'withdrawal' ||
+            (transaction.type === 'reversal' &&
+              transaction.metadata?.withdrawal_amount)) &&
+          transaction.metadata?.withdrawal_amount
+            ? transaction.metadata.withdrawal_amount
+            : transaction.amount}
         </p>
         <Badge className={getStatusColor(transaction.status)}>
           {transaction.status.charAt(0).toUpperCase() +

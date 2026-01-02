@@ -38,6 +38,7 @@ export function TransactionStatusFilter({
     },
     { id: 'status-failed', label: 'Failed', value: 'failed' },
     { id: 'status-reversed', label: 'Reversed', value: 'reversed' },
+    { id: 'status-void', label: 'Void', value: 'void' },
   ];
 
   const getDisplayText = () => {
@@ -52,6 +53,7 @@ export function TransactionStatusFilter({
       processing: 'Processing',
       failed: 'Failed',
       reversed: 'Reversed',
+      void: 'Void',
     };
 
     return selectedStatuses

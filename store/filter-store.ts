@@ -22,7 +22,8 @@ export type TransactionStatus =
   | 'processing'
   | 'successful'
   | 'failed'
-  | 'reversed';
+  | 'reversed'
+  | 'void';
 
 interface FilterState {
   isFilterOpen: boolean;

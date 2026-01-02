@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { X } from 'lucide-react';
 import { formatDate } from '@/lib/utils';
 import type { Transaction } from '@/lib/types';
 
@@ -22,12 +23,36 @@ export function TransactionItem({
         return 'text-red-600';
       case 'reversed':
         return 'text-gray-600';
+      case 'void':
+        return 'text-orange-600';
       default:
         return 'text-muted-foreground';
     }
   };
 
-  const getTransactionIcon = (type: string, category: string) => {
+  const getTransactionIcon = (type: string, category: string, status: string) => {
+    // Voided transactions get a different icon
+    if (status === 'void') {
+      return (
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-orange-100">
+          <X className="h-6 w-6 text-orange-600" />
+        </div>
+      );
+    }
+    if (type === 'reversal') {
+      // Reversals are credits (bring money back), so use credit icon
+      return (
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100">
+          <Image
+            src="/call_received.svg"
+            height={12}
+            width={12}
+            alt="reversal"
+            priority
+          />
+        </div>
+      );
+    }
     if (type === 'debit' || category === 'withdrawal') {
       return (
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
@@ -36,19 +61,6 @@ export function TransactionItem({
             height={12}
             width={12}
             alt="debit"
-            priority
-          />
-        </div>
-      );
-    }
-    if (type === 'reversal') {
-      return (
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100">
-          <Image
-            src="/call_made.svg"
-            height={12}
-            width={12}
-            alt="reversal"
             priority
           />
         </div>
@@ -68,6 +80,10 @@ export function TransactionItem({
   };
 
   const getTransactionLabel = (transaction: Transaction) => {
+    // Reversals should always show as "Reversal"
+    if (transaction.type === 'reversal') {
+      return 'Reversal';
+    }
     if (transaction.transaction_category === 'withdrawal') {
       return 'Cash Withdrawal';
     }
@@ -75,10 +91,10 @@ export function TransactionItem({
       return 'Deposit';
     }
     if (transaction.transaction_category === 'manual_credit') {
-      return 'Manual Credit';
+      return 'Credit';
     }
     if (transaction.transaction_category === 'manual_debit') {
-      return 'Manual Debit';
+      return 'Debit';
     }
     if (transaction.transaction_category === 'fee') {
       return 'Fee';
@@ -99,7 +115,7 @@ export function TransactionItem({
       onClick={() => onClick(transaction)}
     >
       <div className="flex items-center gap-3">
-        {getTransactionIcon(transaction.type, transaction.transaction_category)}
+        {getTransactionIcon(transaction.type, transaction.transaction_category, transaction.status)}
         <div>
           <div className="flex items-center gap-2">
             <span className="font-medium">{getTransactionLabel(transaction)}</span>
@@ -123,7 +139,13 @@ export function TransactionItem({
           }`}
         >
           {transaction.type === 'debit' ? '-' : '+'}
-          {transaction.currency} {transaction.amount}
+          {transaction.currency}{' '}
+          {(transaction.transaction_category === 'withdrawal' ||
+            (transaction.type === 'reversal' &&
+              transaction.metadata?.withdrawal_amount)) &&
+          transaction.metadata?.withdrawal_amount
+            ? transaction.metadata.withdrawal_amount
+            : transaction.amount}
         </div>
         <div className="text-sm text-muted-foreground">
           {formatDate(transaction.date || transaction.created_at)}

@@ -99,6 +99,13 @@ const getStatusColorConfig = (status?: string, type?: string) => {
         border: '#6b7280', // gray-500
         stroke: '#6b7280',
       };
+    case 'void':
+      return {
+        bg: '#fed7aa', // orange-200
+        text: '#9a3412', // orange-800
+        border: '#f97316', // orange-500
+        stroke: '#f97316',
+      };
     default:
       return {
         bg: '#f3f4f6', // gray-100
