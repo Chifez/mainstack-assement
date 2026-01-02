@@ -161,13 +161,7 @@ export async function createReversal(
   originalId: string,
   reason?: string
 ): Promise<TransactionRow | null> {
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'transactions.ts:160',message:'createReversal entry',data:{originalId,reason},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   const original = await getTransactionById(originalId);
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'transactions.ts:165',message:'Original transaction fetched',data:{hasOriginal:!!original,originalType:original?.type,originalStatus:original?.status,originalStatusType:typeof original?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'E'})}).catch(()=>{});
-  // #endregion
   if (!original || original.type === 'reversal') {
     return null;
   }
@@ -206,28 +200,16 @@ export async function createReversal(
   // Update original transaction - set status to 'void' if it was 'successful'
   // Check status as string to handle both string and enum types
   const originalStatus = String(original.status).toLowerCase();
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'transactions.ts:202',message:'Checking original status',data:{originalStatus,originalStatusRaw:original.status,willSetVoid:originalStatus === 'successful',reversalId:reversal.id},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'E'})}).catch(()=>{});
-  // #endregion
   if (originalStatus === 'successful') {
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'transactions.ts:204',message:'Updating original to void',data:{originalId,reversalId:reversal.id},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-    // #endregion
     try {
-      const updateResult = await query(
+      await query(
         `UPDATE transactions
          SET reversed_by = $1, status = 'void', updated_at = CURRENT_TIMESTAMP
          WHERE id = $2
          RETURNING id, status`,
         [reversal.id, originalId]
       );
-      // #region agent log
-      fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'transactions.ts:210',message:'Original update result',data:{rowsUpdated:updateResult?.length,updatedStatus:updateResult?.[0]?.status},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
     } catch (updateError: any) {
-      // #region agent log
-      fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'transactions.ts:216',message:'Error updating original to void, falling back to reversed_by only',data:{error:String(updateError),originalId},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'B'})}).catch(()=>{});
-      // #endregion
       // If updating to void fails (e.g., constraint not updated), just set reversed_by
       // This ensures the reversal is still created and can be processed
       await query(
@@ -239,9 +221,6 @@ export async function createReversal(
     }
   } else {
     // If original wasn't successful, just set reversed_by
-    // #region agent log
-    fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'transactions.ts:227',message:'Original not successful, only setting reversed_by',data:{originalStatus,originalId},timestamp:Date.now(),sessionId:'debug-session',runId:'post-fix',hypothesisId:'E'})}).catch(()=>{});
-    // #endregion
     await query(
       `UPDATE transactions
        SET reversed_by = $1, updated_at = CURRENT_TIMESTAMP
@@ -250,9 +229,6 @@ export async function createReversal(
     );
   }
 
-  // #region agent log
-  fetch('http://127.0.0.1:7245/ingest/93e671da-f115-421f-965c-23cd29ed3bd5',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'transactions.ts:225',message:'createReversal returning',data:{reversalId:reversal.id,reversalStatus:reversal.status},timestamp:Date.now(),sessionId:'debug-session',runId:'run1',hypothesisId:'B'})}).catch(()=>{});
-  // #endregion
   return reversal;
 }
 

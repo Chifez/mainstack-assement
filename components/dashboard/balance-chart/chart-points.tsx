@@ -67,12 +67,14 @@ export function useChartData(
           ? parseFloat(transaction.amount)
           : transaction.amount;
 
-      if (transaction.type === 'credit') {
+      // Add credits and reversals, subtract withdrawals (voided or successful)
+      if (transaction.type === 'credit' && transaction.status === 'successful') {
         runningBalance += amount;
-      } else if (transaction.type === 'debit') {
-        runningBalance -= amount;
-      } else if (transaction.type === 'reversal') {
-        // Reversals adjust the balance back
+      } else if (transaction.type === 'reversal' && transaction.status === 'successful') {
+        // Reversals add money back
+        runningBalance += amount;
+      } else if (transaction.type === 'debit' && (transaction.status === 'successful' || transaction.status === 'void')) {
+        // Subtract withdrawals whether they're successful or voided
         runningBalance -= amount;
       }
 

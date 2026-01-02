@@ -7,18 +7,18 @@ export async function calculateBalance(
 ): Promise<BalanceResult> {
   const result = await queryOne<BalanceResult>(
     `SELECT 
-      -- Ledger balance: all successful credits minus all successful debits
+      -- Ledger balance: add credits and reversals, subtract withdrawals (voided or successful)
       COALESCE(SUM(CASE 
         WHEN type = 'credit' AND status = 'successful' THEN amount 
-        WHEN type = 'debit' AND status = 'successful' THEN -amount
         WHEN type = 'reversal' AND status = 'successful' THEN amount
+        WHEN type = 'debit' AND status IN ('successful', 'void') THEN -amount
         ELSE 0 
       END), 0) as ledger_balance,
       -- Available balance: ledger balance minus pending debits
       COALESCE(SUM(CASE 
         WHEN type = 'credit' AND status = 'successful' THEN amount 
-        WHEN type = 'debit' AND status = 'successful' THEN -amount
         WHEN type = 'reversal' AND status = 'successful' THEN amount
+        WHEN type = 'debit' AND status IN ('successful', 'void') THEN -amount
         WHEN type = 'debit' AND status = 'pending' THEN -amount
         ELSE 0 
       END), 0) as available_balance,
