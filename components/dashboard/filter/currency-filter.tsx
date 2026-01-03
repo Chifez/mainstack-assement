@@ -80,3 +80,4 @@ export function CurrencyFilter({
     </div>
   );
 }
+

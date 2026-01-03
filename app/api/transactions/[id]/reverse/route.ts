@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
+import { requirePermission } from '@/lib/auth/rbac';
+import { RESOURCES, ACTIONS } from '@/lib/auth/permissions';
 import {
   getTransactionById,
   createReversal,
@@ -11,6 +13,9 @@ import {
 import { createAuditLog } from '@/lib/db/queries/audit';
 import { NotFoundError } from '@/lib/utils/errors';
 import { transactionProcessor } from '@/lib/services/transaction-processor';
+import { withTransaction } from '@/lib/db/index';
+import { emitTransactionReversed } from '@/lib/events/transaction-events';
+import '@/lib/events/init';
 
 export async function POST(
   request: Request,
@@ -18,6 +23,7 @@ export async function POST(
 ) {
   try {
     const user = await requireAuth();
+    await requirePermission(user, RESOURCES.TRANSACTIONS, ACTIONS.REVERSE);
     const { id } = await params;
     const transaction = await getTransactionById(id);
 
@@ -35,7 +41,30 @@ export async function POST(
     const body = await request.json();
     const validated = reverseTransactionSchema.parse(body);
 
-    const reversal = await createReversal(transaction.id, validated.reason);
+    const reversal = await withTransaction(async (client) => {
+      const rev = await createReversal(
+        transaction.id,
+        validated.reason,
+        client
+      );
+
+      if (!rev) {
+        return null;
+      }
+
+      await createAuditLog(
+        {
+          action: 'REVERSE',
+          entity_type: 'TRANSACTION',
+          entity_id: transaction.id,
+          user_id: user.id,
+          changes: { reversed_by: rev.id },
+        },
+        client
+      );
+
+      return rev;
+    });
 
     if (!reversal) {
       return NextResponse.json(
@@ -44,27 +73,17 @@ export async function POST(
       );
     }
 
-    // Create audit log
-    await createAuditLog({
-      action: 'REVERSE',
-      entity_type: 'TRANSACTION',
-      entity_id: transaction.id,
-      user_id: user.id,
-      changes: { reversed_by: reversal.id },
-    });
+    await emitTransactionReversed(transaction, reversal, user.id);
 
-    // Add reversal to processing queue
-    // Reversals are credits (bring money back), so use 'credit' type for processing
-    // Mark as isReversal so it never fails
     transactionProcessor.addToQueue(
       reversal.id,
       reversal.wallet_id,
       user.id,
       'credit',
       reversal.transaction_category,
-      false, // forceFailure
-      false, // shouldReverse
-      true // isReversal
+      false,
+      false,
+      true
     );
 
     return NextResponse.json({
@@ -78,8 +97,11 @@ export async function POST(
       },
     });
   } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (error.message === 'Unauthorized' || error.name === 'UnauthorizedError') {
+      return NextResponse.json(
+        { error: error.message || 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     if (error instanceof NotFoundError) {

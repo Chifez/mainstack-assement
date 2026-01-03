@@ -1,17 +1,22 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
+import { requirePermission } from '@/lib/auth/rbac';
+import { RESOURCES, ACTIONS } from '@/lib/auth/permissions';
 import { getWalletByUserId } from '@/lib/db/queries/wallets';
 import { createTransaction } from '@/lib/db/queries/transactions';
 import { createTransactionSchema } from '@/lib/utils/validation';
 import { generateIdempotencyKey } from '@/lib/utils/idempotency';
 import { createAuditLog } from '@/lib/db/queries/audit';
+import { withTransaction } from '@/lib/db/index';
+import { emitTransactionCreated } from '@/lib/events/transaction-events';
+import '@/lib/events/init';
 
 export async function POST(request: Request) {
   try {
     const user = await requireAuth();
+    await requirePermission(user, RESOURCES.TRANSACTIONS, ACTIONS.CREATE);
     const body = await request.json();
 
-    // For manual operations, wallet_id should be provided or use current user's wallet
     let walletId = body.wallet_id;
     if (!walletId) {
       const wallet = await getWalletByUserId(user.id);
@@ -27,7 +32,6 @@ export async function POST(request: Request) {
     const validated = createTransactionSchema.parse({
       ...body,
       wallet_id: walletId,
-      // Manual operations should use manual_credit or manual_debit category
       transaction_category:
         body.transaction_category ||
         (body.type === 'credit' ? 'manual_credit' : 'manual_debit'),
@@ -36,20 +40,31 @@ export async function POST(request: Request) {
     const idempotencyKey =
       validated.idempotency_key || generateIdempotencyKey();
 
-    const transaction = await createTransaction({
-      ...validated,
-      status: 'successful', // Manual transactions are immediately successful
-      idempotency_key: idempotencyKey,
+    const transaction = await withTransaction(async (client) => {
+      const tx = await createTransaction(
+        {
+          ...validated,
+          status: 'successful',
+          idempotency_key: idempotencyKey,
+        },
+        client
+      );
+
+      await createAuditLog(
+        {
+          action: 'CREATE',
+          entity_type: 'TRANSACTION',
+          entity_id: tx.id,
+          user_id: user.id,
+          changes: { manual_operation: true },
+        },
+        client
+      );
+
+      return tx;
     });
 
-    // Create audit log
-    await createAuditLog({
-      action: 'CREATE',
-      entity_type: 'TRANSACTION',
-      entity_id: transaction.id,
-      user_id: user.id,
-      changes: { manual_operation: true },
-    });
+    await emitTransactionCreated(transaction, user.id);
 
     return NextResponse.json(
       {
@@ -65,8 +80,11 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (error.message === 'Unauthorized' || error.name === 'UnauthorizedError') {
+      return NextResponse.json(
+        { error: error.message || 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     if (error.name === 'ZodError') {

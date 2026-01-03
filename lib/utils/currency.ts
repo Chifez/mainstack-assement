@@ -50,7 +50,10 @@ export function roundAmount(amount: number, currency: string): number {
  * Format amount as string with proper decimal places
  * Used when storing in database (PostgreSQL DECIMAL handles it, but good for consistency)
  */
-export function formatAmountForStorage(amount: number, currency: string): string {
+export function formatAmountForStorage(
+  amount: number,
+  currency: string
+): string {
   const rounded = roundAmount(amount, currency);
   const decimals = getCurrencyDecimals(currency);
   return rounded.toFixed(decimals);
@@ -77,5 +80,3 @@ export function validateAmountDecimals(
   // Allow tiny floating-point differences (epsilon check)
   return Math.abs(amount - rounded) < Math.pow(10, -(decimals + 2));
 }
-
-

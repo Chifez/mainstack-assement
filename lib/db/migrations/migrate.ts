@@ -30,6 +30,7 @@ export async function runMigrations() {
       '001_initial_schema.sql',
       '002_update_amount_precision.sql',
       '003_add_void_status.sql',
+      '004_add_rbac.sql',
     ];
 
     for (const migrationFile of migrationFiles) {

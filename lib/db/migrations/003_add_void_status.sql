@@ -6,3 +6,4 @@ ALTER TABLE transactions
 ADD CONSTRAINT transactions_status_check 
 CHECK (status IN ('pending', 'processing', 'successful', 'failed', 'reversed', 'void'));
 
+

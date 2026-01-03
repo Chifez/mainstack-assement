@@ -7,3 +7,4 @@ ALTER TABLE transactions
 ALTER COLUMN amount TYPE DECIMAL(20, 8);
 
 
+

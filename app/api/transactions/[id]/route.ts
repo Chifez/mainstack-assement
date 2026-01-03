@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
+import { requirePermission } from '@/lib/auth/rbac';
+import { RESOURCES, ACTIONS } from '@/lib/auth/permissions';
 import {
   getTransactionById,
   createReversal,
@@ -11,13 +13,15 @@ import {
 } from '@/lib/utils/validation';
 import { createAuditLog } from '@/lib/db/queries/audit';
 import { NotFoundError } from '@/lib/utils/errors';
+import '@/lib/events/init'; // Initialize event listeners
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
+    await requirePermission(user, RESOURCES.TRANSACTIONS, ACTIONS.READ);
     const { id } = await params;
     const transaction = await getTransactionById(id);
 
@@ -39,8 +43,11 @@ export async function GET(
       },
     });
   } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (error.message === 'Unauthorized' || error.name === 'UnauthorizedError') {
+      return NextResponse.json(
+        { error: error.message || 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     console.error('Get transaction error:', error);
@@ -57,6 +64,7 @@ export async function POST(
 ) {
   try {
     const user = await requireAuth();
+    await requirePermission(user, RESOURCES.TRANSACTIONS, ACTIONS.UPDATE);
     const { id } = await params;
     const transaction = await getTransactionById(id);
 
@@ -109,8 +117,11 @@ export async function POST(
 
     return NextResponse.json({ error: 'Invalid endpoint' }, { status: 400 });
   } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (error.message === 'Unauthorized' || error.name === 'UnauthorizedError') {
+      return NextResponse.json(
+        { error: error.message || 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     if (error instanceof NotFoundError) {

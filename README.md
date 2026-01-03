@@ -26,6 +26,9 @@ This project **started as a frontend assessment test at Mainstack** and has been
 - Idempotency and error handling
 - Real-world payment processing simulation
 - Production-ready deployment configuration
+- **OLTP-style database transactions** with ACID guarantees
+- **Role-Based Access Control (RBAC)** for secure permission management
+- **Event-driven architecture** for decoupled, reactive updates
 
 This evolution showcases how a simple assessment project can be expanded into a robust, enterprise-grade application with proper architecture, database design, and real-world financial system patterns.
 
@@ -98,10 +101,46 @@ This system demonstrates how to build a financial application that:
 
 - **Authentication**: User registration and login with session management
 - **Database**: PostgreSQL with proper schema design and migrations
-- **API Routes**: RESTful API for all operations
+- **OLTP Transactions**: ACID-compliant database transactions with automatic rollback
+- **RBAC**: Role-based access control with granular permissions
+- **Event-Driven Architecture**: Decoupled event system for transaction lifecycle events
+- **API Routes**: RESTful API for all operations with permission checks
 - **Data Validation**: Zod schemas for runtime type checking
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 - **State Management**: Zustand for global state, TanStack Query for server state
+
+## Architecture
+
+### Database Transactions (OLTP)
+
+The system implements OLTP-style database transactions to ensure data consistency and atomicity:
+
+- **ACID Guarantees**: All multi-step operations are wrapped in transactions
+- **Automatic Rollback**: Failed operations automatically roll back all changes
+- **Deadlock Handling**: Automatic retry with exponential backoff on deadlocks
+- **Isolation Levels**: Configurable transaction isolation (default: READ COMMITTED)
+
+All database operations that modify multiple tables (e.g., creating a transaction + audit log) are wrapped in `withTransaction()` to ensure atomicity.
+
+### Role-Based Access Control (RBAC)
+
+The system implements a comprehensive RBAC system:
+
+- **Roles**: Pre-defined roles (admin, user, auditor, support) with different permission sets
+- **Permissions**: Granular permissions using `resource:action` format (e.g., `transactions:create`)
+- **Authorization**: All API routes check permissions before executing operations
+- **Resource Ownership**: Users can only access their own resources unless they have admin permissions
+
+### Event-Driven Architecture
+
+The system uses an event-driven architecture for decoupled updates:
+
+- **Event Emitter**: Generic event emitter for application-wide events
+- **Transaction Events**: Events for transaction lifecycle (created, updated, reversed, failed)
+- **Event Listeners**: Pluggable event handlers for notifications, analytics, etc.
+- **Async Processing**: Events are emitted after database transactions commit
+
+This architecture allows easy extension without modifying core business logic.
 
 ## Tech Stack
 
@@ -188,9 +227,19 @@ The technology stack was chosen for convenience, out-of-the-box tooling, optimiz
 ├── lib/                          # Utility functions and API calls
 │   ├── db/                       # Database utilities
 │   │   ├── migrations/          # Database migrations
-│   │   └── queries/              # Database query functions
+│   │   ├── queries/              # Database query functions
+│   │   └── index.ts             # Database connection and transaction wrapper
+│   ├── auth/                     # Authentication and authorization
+│   │   ├── permissions.ts       # Permission definitions
+│   │   ├── rbac.ts              # RBAC authorization helpers
+│   │   └── session.ts            # Session management
+│   ├── events/                   # Event-driven architecture
+│   │   ├── event-emitter.ts     # Generic event emitter
+│   │   ├── transaction-events.ts # Transaction-specific events
+│   │   └── init.ts              # Event listener initialization
+│   ├── services/                 # Business logic services
+│   │   └── transaction-processor.ts # Async transaction processing
 │   ├── api.ts                    # API client functions
-│   ├── auth/                     # Authentication utilities
 │   └── utils/                    # General utilities
 ├── store/                        # Zustand stores
 │   └── currency-store.ts         # Currency selection store

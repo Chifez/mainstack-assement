@@ -62,7 +62,6 @@ export async function fetchUser(): Promise<User> {
   return response.user;
 }
 
-// Wallet functions
 export async function fetchWallet(): Promise<Wallet> {
   const response = await fetchAPI<{ wallet: Wallet }>('/wallets');
   return response.wallet;
@@ -75,7 +74,6 @@ export async function fetchBalance(currency: string = 'USD'): Promise<Balance> {
   return response.balance;
 }
 
-// Transaction functions
 export interface TransactionFilters {
   type?: string;
   transaction_category?: string;
@@ -124,7 +122,6 @@ export interface CreateTransactionRequest {
 export async function createTransaction(
   data: CreateTransactionRequest
 ): Promise<Transaction> {
-  // Get simulation state - handle both client and server side
   let simulationStore: any = null;
   if (typeof window !== 'undefined') {
     simulationStore = useSimulationStore.getState();
@@ -134,7 +131,6 @@ export async function createTransaction(
     'Content-Type': 'application/json',
   };
 
-  // Add simulation headers
   if (simulationStore?.simulateNetworkFailure) {
     headers['x-simulate-network-failure'] = 'true';
   }
@@ -158,7 +154,6 @@ export async function createTransaction(
     body: JSON.stringify(data),
   });
 
-  // Handle duplicate transactions
   if (response.isDuplicate && response.message) {
     toast.warning('Duplicate Transaction', {
       description: response.message,
@@ -202,7 +197,6 @@ export async function reverseTransaction(
   return response.reversal;
 }
 
-// Withdrawal function (for backward compatibility)
 export interface WithdrawalRequest {
   amount: number;
   vatAmount: number;
@@ -225,7 +219,7 @@ export async function handleWithdrawal({
     transaction_category: 'withdrawal',
     amount: totalAmount,
     currency: 'USD',
-    metadata: {
+      metadata: {
       withdrawal_amount: amount,
       vat_amount: vatAmount,
       total_amount: totalAmount,
@@ -234,11 +228,11 @@ export async function handleWithdrawal({
 
   const balance = await fetchBalance('USD');
 
-  return {
+    return {
     transaction,
     newBalance: balance.available_balance,
     newPendingPayout: balance.pending_debits,
     newLedgerBalance: balance.ledger_balance,
-    success: true,
-  };
+      success: true,
+    };
 }

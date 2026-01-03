@@ -1,5 +1,3 @@
-// Network failure simulation is now handled by forcing transaction to fail during processing
-// This function is kept for backward compatibility but is no longer used
 export async function simulateNetworkFailure(): Promise<never> {
   await new Promise((resolve) => setTimeout(resolve, 2000)); // Delay
   throw new Error('Network request failed. Please retry.');

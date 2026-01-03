@@ -1,9 +1,11 @@
 import { queryOne } from '../index';
+import { PoolClient } from 'pg';
 import { BalanceResult } from '../types';
 
 export async function calculateBalance(
   walletId: string,
-  currency: string = 'USD'
+  currency: string = 'USD',
+  client?: PoolClient
 ): Promise<BalanceResult> {
   const result = await queryOne<BalanceResult>(
     `SELECT 
@@ -34,7 +36,8 @@ export async function calculateBalance(
       END), 0) as pending_credits
     FROM transactions
     WHERE wallet_id = $1 AND currency = $2`,
-    [walletId, currency]
+    [walletId, currency],
+    client
   );
 
   return (
@@ -49,7 +52,8 @@ export async function calculateBalance(
 
 export async function calculatePendingBalance(
   walletId: string,
-  currency: string = 'USD'
+  currency: string = 'USD',
+  client?: PoolClient
 ): Promise<{ pending_debits: string; pending_credits: string }> {
   const result = await queryOne<{
     pending_debits: string;
@@ -66,7 +70,8 @@ export async function calculatePendingBalance(
       END), 0) as pending_credits
     FROM transactions
     WHERE wallet_id = $1 AND currency = $2`,
-    [walletId, currency]
+    [walletId, currency],
+    client
   );
 
   return (

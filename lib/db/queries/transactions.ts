@@ -1,4 +1,5 @@
 import { query, queryOne } from '../index';
+import { PoolClient } from 'pg';
 import {
   TransactionRow,
   TransactionType,
@@ -22,15 +23,14 @@ export interface CreateTransactionData {
 }
 
 export async function createTransaction(
-  data: CreateTransactionData
+  data: CreateTransactionData,
+  client?: PoolClient
 ): Promise<TransactionRow> {
   const id = uuidv4();
   const transaction_id = `TXN-${Date.now()}-${Math.random()
     .toString(36)
     .substr(2, 9)}`;
 
-  // Round amount to currency-specific precision before storing
-  // This follows industry standards for monetary precision
   const roundedAmount = roundAmount(data.amount, data.currency);
 
   const result = await query<TransactionRow>(
@@ -47,31 +47,37 @@ export async function createTransaction(
       data.type,
       data.transaction_category,
       data.status,
-      roundedAmount, // Store rounded amount
+      roundedAmount,
       data.currency,
       JSON.stringify(data.metadata || {}),
       data.idempotency_key || null,
       data.reversal_of || null,
-    ]
+    ],
+    client
   );
 
   return result[0];
 }
 
 export async function getTransactionById(
-  id: string
+  id: string,
+  client?: PoolClient
 ): Promise<TransactionRow | null> {
-  return queryOne<TransactionRow>('SELECT * FROM transactions WHERE id = $1', [
-    id,
-  ]);
+  return queryOne<TransactionRow>(
+    'SELECT * FROM transactions WHERE id = $1',
+    [id],
+    client
+  );
 }
 
 export async function getTransactionByTransactionId(
-  transactionId: string
+  transactionId: string,
+  client?: PoolClient
 ): Promise<TransactionRow | null> {
   return queryOne<TransactionRow>(
     'SELECT * FROM transactions WHERE transaction_id = $1',
-    [transactionId]
+    [transactionId],
+    client
   );
 }
 
@@ -89,7 +95,8 @@ export interface TransactionFilters {
 
 export async function getTransactionsByWallet(
   walletId: string,
-  filters?: TransactionFilters
+  filters?: TransactionFilters,
+  client?: PoolClient
 ): Promise<TransactionRow[]> {
   let sql = 'SELECT * FROM transactions WHERE wallet_id = $1';
   const params: any[] = [walletId];
@@ -140,28 +147,31 @@ export async function getTransactionsByWallet(
     }
   }
 
-  return query<TransactionRow>(sql, params);
+  return query<TransactionRow>(sql, params, client);
 }
 
 export async function updateTransactionStatus(
   id: string,
-  status: TransactionStatus
+  status: TransactionStatus,
+  client?: PoolClient
 ): Promise<TransactionRow | null> {
   const result = await query<TransactionRow>(
     `UPDATE transactions
      SET status = $1, updated_at = CURRENT_TIMESTAMP
      WHERE id = $2
      RETURNING *`,
-    [status, id]
+    [status, id],
+    client
   );
   return result[0] || null;
 }
 
 export async function createReversal(
   originalId: string,
-  reason?: string
+  reason?: string,
+  client?: PoolClient
 ): Promise<TransactionRow | null> {
-  const original = await getTransactionById(originalId);
+  const original = await getTransactionById(originalId, client);
   if (!original || original.type === 'reversal') {
     return null;
   }
@@ -169,36 +179,35 @@ export async function createReversal(
   const reversalType: TransactionType = 'reversal';
   const reversalStatus: TransactionStatus = 'pending';
 
-  // Parse amount from database string to number
   const originalAmount = parseAmountFromDB(original.amount);
 
-  // Preserve original transaction metadata (e.g., withdrawal_amount, vat_amount for withdrawals)
-  const originalMetadata = typeof original.metadata === 'string' 
-    ? JSON.parse(original.metadata) 
-    : original.metadata || {};
+  const originalMetadata =
+    typeof original.metadata === 'string'
+      ? JSON.parse(original.metadata)
+      : original.metadata || {};
 
-  const reversal = await createTransaction({
-    wallet_id: original.wallet_id,
-    type: reversalType,
-    transaction_category: original.transaction_category,
-    status: reversalStatus,
-    amount: originalAmount, // This is the total amount (with VAT for withdrawals)
-    currency: original.currency,
-    metadata: {
-      reason: reason || 'Transaction reversal',
-      original_transaction_id: original.transaction_id,
-      // Preserve withdrawal metadata if it exists
-      ...(originalMetadata.withdrawal_amount && {
-        withdrawal_amount: originalMetadata.withdrawal_amount,
-        vat_amount: originalMetadata.vat_amount,
-        total_amount: originalAmount,
-      }),
+  const reversal = await createTransaction(
+    {
+      wallet_id: original.wallet_id,
+      type: reversalType,
+      transaction_category: original.transaction_category,
+      status: reversalStatus,
+      amount: originalAmount,
+      currency: original.currency,
+      metadata: {
+        reason: reason || 'Transaction reversal',
+        original_transaction_id: original.transaction_id,
+        ...(originalMetadata.withdrawal_amount && {
+          withdrawal_amount: originalMetadata.withdrawal_amount,
+          vat_amount: originalMetadata.vat_amount,
+          total_amount: originalAmount,
+        }),
+      },
+      reversal_of: original.id,
     },
-    reversal_of: original.id,
-  });
+    client
+  );
 
-  // Update original transaction - set status to 'void' if it was 'successful'
-  // Check status as string to handle both string and enum types
   const originalStatus = String(original.status).toLowerCase();
   if (originalStatus === 'successful') {
     try {
@@ -207,25 +216,25 @@ export async function createReversal(
          SET reversed_by = $1, status = 'void', updated_at = CURRENT_TIMESTAMP
          WHERE id = $2
          RETURNING id, status`,
-        [reversal.id, originalId]
+        [reversal.id, originalId],
+        client
       );
     } catch (updateError: any) {
-      // If updating to void fails (e.g., constraint not updated), just set reversed_by
-      // This ensures the reversal is still created and can be processed
       await query(
         `UPDATE transactions
          SET reversed_by = $1, updated_at = CURRENT_TIMESTAMP
          WHERE id = $2`,
-        [reversal.id, originalId]
+        [reversal.id, originalId],
+        client
       );
     }
   } else {
-    // If original wasn't successful, just set reversed_by
     await query(
       `UPDATE transactions
        SET reversed_by = $1, updated_at = CURRENT_TIMESTAMP
        WHERE id = $2`,
-      [reversal.id, originalId]
+      [reversal.id, originalId],
+      client
     );
   }
 
@@ -233,13 +242,15 @@ export async function createReversal(
 }
 
 export async function checkIdempotency(
-  key: string
+  key: string,
+  client?: PoolClient
 ): Promise<TransactionRow | null> {
   const result = await query<TransactionRow>(
     `SELECT t.* FROM transactions t
      INNER JOIN idempotency_keys ik ON t.id = ik.transaction_id
      WHERE ik.key = $1`,
-    [key]
+    [key],
+    client
   );
 
   if (result.length > 0) {
@@ -251,12 +262,14 @@ export async function checkIdempotency(
 
 export async function storeIdempotencyKey(
   key: string,
-  transactionId: string
+  transactionId: string,
+  client?: PoolClient
 ): Promise<void> {
   await query(
     `INSERT INTO idempotency_keys (key, transaction_id)
      VALUES ($1, $2)
      ON CONFLICT (key) DO NOTHING`,
-    [key, transactionId]
+    [key, transactionId],
+    client
   );
 }

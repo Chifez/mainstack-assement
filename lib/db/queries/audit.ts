@@ -1,4 +1,5 @@
 import { query, queryOne } from '../index';
+import { PoolClient } from 'pg';
 import { AuditLogRow } from '../types';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -12,7 +13,8 @@ export interface CreateAuditLogData {
 }
 
 export async function createAuditLog(
-  data: CreateAuditLogData
+  data: CreateAuditLogData,
+  client?: PoolClient
 ): Promise<AuditLogRow> {
   const id = uuidv4();
   const result = await query<AuditLogRow>(
@@ -29,7 +31,8 @@ export async function createAuditLog(
       data.user_id,
       JSON.stringify(data.changes || {}),
       data.ip_address || null,
-    ]
+    ],
+    client
   );
   return result[0];
 }
@@ -45,7 +48,8 @@ export interface AuditLogFilters {
 }
 
 export async function getAuditLogs(
-  filters?: AuditLogFilters
+  filters?: AuditLogFilters,
+  client?: PoolClient
 ): Promise<AuditLogRow[]> {
   let sql = 'SELECT * FROM audit_logs WHERE 1=1';
   const params: any[] = [];
@@ -91,6 +95,7 @@ export async function getAuditLogs(
     }
   }
 
-  return query<AuditLogRow>(sql, params);
+  return query<AuditLogRow>(sql, params, client);
 }
+
 

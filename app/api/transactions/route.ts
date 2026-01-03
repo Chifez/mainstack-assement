@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
+import { requirePermission } from '@/lib/auth/rbac';
+import { RESOURCES, ACTIONS } from '@/lib/auth/permissions';
 import { getWalletByUserId } from '@/lib/db/queries/wallets';
 import {
   getTransactionsByWallet,
@@ -21,10 +23,14 @@ import {
 import { createAuditLog } from '@/lib/db/queries/audit';
 import { InsufficientFundsError } from '@/lib/utils/errors';
 import { transactionProcessor } from '@/lib/services/transaction-processor';
+import { withTransaction } from '@/lib/db/index';
+import { emitTransactionCreated } from '@/lib/events/transaction-events';
+import '@/lib/events/init';
 
 export async function GET(request: Request) {
   try {
     const user = await requireAuth();
+    await requirePermission(user, RESOURCES.TRANSACTIONS, ACTIONS.READ);
     const wallet = await getWalletByUserId(user.id);
 
     if (!wallet) {
@@ -78,13 +84,13 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const user = await requireAuth();
+    await requirePermission(user, RESOURCES.TRANSACTIONS, ACTIONS.CREATE);
     const wallet = await getWalletByUserId(user.id);
 
     if (!wallet) {
       return NextResponse.json({ error: 'Wallet not found' }, { status: 404 });
     }
 
-    // Check simulation flags
     const simulateNetwork =
       request.headers.get('x-simulate-network-failure') === 'true';
     const simulateInsufficient =
@@ -100,15 +106,12 @@ export async function POST(request: Request) {
       wallet_id: wallet.id,
     });
 
-    // Generate or use provided idempotency key
     let idempotencyKey = validated.idempotency_key || generateIdempotencyKey();
 
-    // Duplicate transaction simulation
     if (simulateDuplicate) {
       idempotencyKey = shouldUseDuplicateIdempotencyKey(true) || idempotencyKey;
     }
 
-    // Validate sufficient funds for debits
     if (validated.type === 'debit') {
       const fundsCheck = await validateSufficientFunds(
         wallet.id,
@@ -116,7 +119,6 @@ export async function POST(request: Request) {
         validated.currency
       );
 
-      // Insufficient funds simulation
       if (
         simulateInsufficient ||
         shouldForceInsufficientFunds(simulateInsufficient)
@@ -139,18 +141,49 @@ export async function POST(request: Request) {
       }
     }
 
-    // Create transaction with idempotency
-    const {
-      result: transaction,
-      isDuplicate,
-      existingTransaction,
-    } = await ensureIdempotency(idempotencyKey, () =>
-      createTransaction({
-        ...validated,
-        status: 'pending', // Regular transactions start as pending
-        idempotency_key: idempotencyKey,
-      })
-    );
+    const { transaction, isDuplicate, existingTransaction } =
+      await withTransaction(async (client) => {
+        const idempotencyResult = await ensureIdempotency(
+          idempotencyKey,
+          (txClient) =>
+            createTransaction(
+              {
+                ...validated,
+                status: 'pending',
+                idempotency_key: idempotencyKey,
+              },
+              txClient
+            ),
+          client
+        );
+
+        if (idempotencyResult.isDuplicate && idempotencyResult.existingTransaction) {
+          return {
+            transaction: null,
+            isDuplicate: true,
+            existingTransaction: idempotencyResult.existingTransaction,
+          };
+        }
+
+        const tx = idempotencyResult.result;
+
+        await createAuditLog(
+          {
+            action: 'CREATE',
+            entity_type: 'TRANSACTION',
+            entity_id: tx.id,
+            user_id: user.id,
+            changes: { created: true },
+          },
+          client
+        );
+
+        return {
+          transaction: tx,
+          isDuplicate: false,
+          existingTransaction: undefined,
+        };
+      });
 
     if (isDuplicate && existingTransaction) {
       return NextResponse.json(
@@ -172,17 +205,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create audit log
-    await createAuditLog({
-      action: 'CREATE',
-      entity_type: 'TRANSACTION',
-      entity_id: transaction.id,
-      user_id: user.id,
-      changes: { created: true },
-    });
+    if (transaction) {
+      await emitTransactionCreated(transaction, user.id);
+    }
 
-    // Add to processing queue for async status updates
-    // Only process regular transactions (not manual ones)
     if (
       transaction.transaction_category !== 'manual_credit' &&
       transaction.transaction_category !== 'manual_debit'
@@ -192,10 +218,10 @@ export async function POST(request: Request) {
         transaction.wallet_id,
         user.id,
         transaction.type as 'credit' | 'debit',
-        transaction.transaction_category,
-        simulateNetwork, // forceFailure flag
-        simulateReversal // shouldReverse flag
-      );
+      transaction.transaction_category,
+      simulateNetwork,
+      simulateReversal
+    );
     }
 
     return NextResponse.json(
@@ -212,8 +238,11 @@ export async function POST(request: Request) {
       { status: 201 }
     );
   } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (error.message === 'Unauthorized' || error.name === 'UnauthorizedError') {
+      return NextResponse.json(
+        { error: error.message || 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     if (error instanceof InsufficientFundsError) {

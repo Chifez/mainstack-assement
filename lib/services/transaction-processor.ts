@@ -1,6 +1,13 @@
 import { updateTransactionStatus, createReversal, getTransactionById } from '@/lib/db/queries/transactions';
 import { createAuditLog } from '@/lib/db/queries/audit';
 import { TransactionStatus } from '@/lib/db/types';
+import { withTransaction } from '@/lib/db/index';
+import {
+  emitTransactionUpdated,
+  emitTransactionReversed,
+  emitTransactionFailed,
+} from '@/lib/events/transaction-events';
+import '@/lib/events/init';
 
 interface ProcessingJob {
   transactionId: string;
@@ -17,7 +24,7 @@ interface ProcessingJob {
 class TransactionProcessor {
   private queue: ProcessingJob[] = [];
   private processing = false;
-  private failureRate = 0.08; // 8% failure rate
+  private failureRate = 0.08;
 
   async addToQueue(
     transactionId: string,
@@ -61,69 +68,117 @@ class TransactionProcessor {
     }
 
     try {
-      // Step 1: Update to processing (after 1-2 seconds)
-      const processingDelay = 1000 + Math.random() * 1000; // 1-2 seconds
+      const processingDelay = 1000 + Math.random() * 1000;
       await new Promise((resolve) => setTimeout(resolve, processingDelay));
 
-      await updateTransactionStatus(job.transactionId, 'processing');
-      await createAuditLog({
-        action: 'UPDATE',
-        entity_type: 'TRANSACTION',
-        entity_id: job.transactionId,
-        user_id: job.userId,
-        changes: { status: 'processing' },
+      const currentTransaction = await getTransactionById(job.transactionId);
+      const previousStatus = currentTransaction?.status;
+
+      await withTransaction(async (client) => {
+        await updateTransactionStatus(job.transactionId, 'processing', client);
+        await createAuditLog(
+          {
+            action: 'UPDATE',
+            entity_type: 'TRANSACTION',
+            entity_id: job.transactionId,
+            user_id: job.userId,
+            changes: { status: 'processing' },
+          },
+          client
+        );
       });
 
-      // Step 2: Update to final status (after 2-3 more seconds)
-      const finalDelay = 2000 + Math.random() * 1000; // 2-3 seconds
+      if (currentTransaction) {
+        await emitTransactionUpdated(
+          { ...currentTransaction, status: 'processing' },
+          previousStatus,
+          job.userId
+        );
+      }
+
+      const finalDelay = 2000 + Math.random() * 1000;
       await new Promise((resolve) => setTimeout(resolve, finalDelay));
 
-      // Check if this is a reversal transaction (either from flag or by checking transaction type)
       const transaction = await getTransactionById(job.transactionId);
       const isReversalTransaction = job.isReversal || transaction?.type === 'reversal';
 
-      // Reversals should never fail - always succeed
-      // Simulate occasional failures or force failure for network simulation (but not for reversals)
       const shouldFail = isReversalTransaction ? false : (job.forceFailure || Math.random() < this.failureRate);
       const finalStatus: TransactionStatus = shouldFail ? 'failed' : 'successful';
 
-      await updateTransactionStatus(job.transactionId, finalStatus);
-      await createAuditLog({
-        action: 'UPDATE',
-        entity_type: 'TRANSACTION',
-        entity_id: job.transactionId,
-        user_id: job.userId,
-        changes: { status: finalStatus },
+      const updatedTransaction = await withTransaction(async (client) => {
+        const updated = await updateTransactionStatus(
+          job.transactionId,
+          finalStatus,
+          client
+        );
+        await createAuditLog(
+          {
+            action: 'UPDATE',
+            entity_type: 'TRANSACTION',
+            entity_id: job.transactionId,
+            user_id: job.userId,
+            changes: { status: finalStatus },
+          },
+          client
+        );
+        return updated;
       });
 
-      // Handle reversal simulation - create reversal after transaction completes
-      if (job.shouldReverse) {
-        try {
-          const reversal = await createReversal(
-            job.transactionId,
-            'Simulated reversal after transaction completion'
+      if (updatedTransaction) {
+        if (finalStatus === 'failed') {
+          await emitTransactionFailed(
+            updatedTransaction,
+            'Transaction processing failed',
+            job.userId
           );
-          if (reversal) {
-            await createAuditLog({
-              action: 'REVERSE',
-              entity_type: 'TRANSACTION',
-              entity_id: job.transactionId,
-              user_id: job.userId,
-              changes: { reversed_by: reversal.id },
-            });
-            
-            // Process the reversal transaction through the queue
-            // Reversals are credits (bring money back), so use 'credit' type
-            // Mark as isReversal so it never fails
+        } else {
+          await emitTransactionUpdated(
+            updatedTransaction,
+            'processing',
+            job.userId
+          );
+        }
+      }
+
+      if (job.shouldReverse && updatedTransaction) {
+        try {
+          const reversal = await withTransaction(async (client) => {
+            const rev = await createReversal(
+              job.transactionId,
+              'Simulated reversal after transaction completion',
+              client
+            );
+            if (rev) {
+              await createAuditLog(
+                {
+                  action: 'REVERSE',
+                  entity_type: 'TRANSACTION',
+                  entity_id: job.transactionId,
+                  user_id: job.userId,
+                  changes: { reversed_by: rev.id },
+                },
+                client
+              );
+            }
+            return rev;
+          });
+
+          if (reversal && updatedTransaction) {
+            await emitTransactionReversed(
+              updatedTransaction,
+              reversal,
+              job.userId
+            );
+
             await this.addToQueue(
               reversal.id,
               reversal.wallet_id,
               job.userId,
               'credit',
               reversal.transaction_category,
-              false, // forceFailure
-              false, // shouldReverse
-              true // isReversal
+              false,
+              false,
+              true
             );
           }
         } catch (reversalError) {
@@ -132,27 +187,42 @@ class TransactionProcessor {
       }
     } catch (error) {
       console.error('Error processing transaction:', error);
-      // Reversals should never fail, even on error - mark as successful
-      // Regular transactions mark as failed on error
       try {
-        // Check if this is a reversal transaction (either from flag or by checking transaction type)
         const transaction = await getTransactionById(job.transactionId).catch(() => null);
         const isReversalTransaction = job.isReversal || transaction?.type === 'reversal';
         const errorStatus: TransactionStatus = isReversalTransaction ? 'successful' : 'failed';
-        await updateTransactionStatus(job.transactionId, errorStatus);
-        await createAuditLog({
-          action: 'UPDATE',
-          entity_type: 'TRANSACTION',
-          entity_id: job.transactionId,
-          user_id: job.userId,
-          changes: { status: errorStatus, error: String(error) },
+
+        const updatedTransaction = await withTransaction(async (client) => {
+          const updated = await updateTransactionStatus(
+            job.transactionId,
+            errorStatus,
+            client
+          );
+          await createAuditLog(
+            {
+              action: 'UPDATE',
+              entity_type: 'TRANSACTION',
+              entity_id: job.transactionId,
+              user_id: job.userId,
+              changes: { status: errorStatus, error: String(error) },
+            },
+            client
+          );
+          return updated;
         });
+
+        if (updatedTransaction && errorStatus === 'failed') {
+          await emitTransactionFailed(
+            updatedTransaction,
+            String(error),
+            job.userId
+          );
+        }
       } catch (updateError) {
         console.error('Error updating transaction status:', updateError);
       }
     }
 
-    // Process next job
     this.processQueue();
   }
 
@@ -161,7 +231,6 @@ class TransactionProcessor {
   }
 }
 
-// Singleton instance
 export const transactionProcessor = new TransactionProcessor();
 
 

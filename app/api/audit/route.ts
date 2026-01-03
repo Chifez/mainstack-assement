@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
+import { requirePermission } from '@/lib/auth/rbac';
+import { RESOURCES, ACTIONS } from '@/lib/auth/permissions';
 import { getAuditLogs } from '@/lib/db/queries/audit';
 
 export async function GET(request: Request) {
   try {
-    await requireAuth();
+    const user = await requireAuth();
+    await requirePermission(user, RESOURCES.AUDIT, ACTIONS.READ);
 
     const { searchParams } = new URL(request.url);
     const entity_type = searchParams.get('entity_type') as any;
@@ -35,8 +38,11 @@ export async function GET(request: Request) {
       })),
     });
   } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (error.message === 'Unauthorized' || error.name === 'UnauthorizedError') {
+      return NextResponse.json(
+        { error: error.message || 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     console.error('Get audit logs error:', error);
@@ -46,4 +52,5 @@ export async function GET(request: Request) {
     );
   }
 }
+
 

@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth/session';
+import { requirePermission } from '@/lib/auth/rbac';
+import { RESOURCES, ACTIONS } from '@/lib/auth/permissions';
 import { updateTransactionStatus } from '@/lib/db/queries/transactions';
 import { getTransactionById } from '@/lib/db/queries/transactions';
 import { createAuditLog } from '@/lib/db/queries/audit';
 import { TransactionStatus } from '@/lib/db/types';
+import { withTransaction } from '@/lib/db/index';
+import { emitTransactionUpdated } from '@/lib/events/transaction-events';
+import '@/lib/events/init';
 import { z } from 'zod';
 
 const updateStatusSchema = z.object({
@@ -23,13 +28,12 @@ export async function PATCH(
 ) {
   try {
     const user = await requireAuth();
+    await requirePermission(user, RESOURCES.TRANSACTIONS, ACTIONS.UPDATE);
     const body = await request.json();
     const { id } = await params;
 
-    // Validate request body
     const validated = updateStatusSchema.parse(body);
 
-    // Get existing transaction
     const existing = await getTransactionById(id);
     if (!existing) {
       return NextResponse.json(
@@ -38,7 +42,6 @@ export async function PATCH(
       );
     }
 
-    // Validate status transition
     const validTransitions: Record<TransactionStatus, TransactionStatus[]> = {
       pending: ['processing', 'failed'],
       processing: ['successful', 'failed'],
@@ -60,8 +63,31 @@ export async function PATCH(
       );
     }
 
-    // Update status
-    const updated = await updateTransactionStatus(id, newStatus);
+    const updated = await withTransaction(async (client) => {
+      const upd = await updateTransactionStatus(id, newStatus, client);
+
+      if (!upd) {
+        return null;
+      }
+
+      await createAuditLog(
+        {
+          action: 'UPDATE',
+          entity_type: 'TRANSACTION',
+          entity_id: id,
+          user_id: user.id,
+          changes: {
+            status: {
+              from: currentStatus,
+              to: newStatus,
+            },
+          },
+        },
+        client
+      );
+
+      return upd;
+    });
 
     if (!updated) {
       return NextResponse.json(
@@ -70,19 +96,7 @@ export async function PATCH(
       );
     }
 
-    // Create audit log
-    await createAuditLog({
-      action: 'UPDATE',
-      entity_type: 'TRANSACTION',
-      entity_id: id,
-      user_id: user.id,
-      changes: {
-        status: {
-          from: currentStatus,
-          to: newStatus,
-        },
-      },
-    });
+    await emitTransactionUpdated(updated, currentStatus, user.id);
 
     return NextResponse.json({
       transaction: {
@@ -95,8 +109,11 @@ export async function PATCH(
       },
     });
   } catch (error: any) {
-    if (error.message === 'Unauthorized') {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    if (error.message === 'Unauthorized' || error.name === 'UnauthorizedError') {
+      return NextResponse.json(
+        { error: error.message || 'Unauthorized' },
+        { status: 401 }
+      );
     }
 
     if (error.name === 'ZodError') {
